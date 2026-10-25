@@ -230,8 +230,8 @@ git push -u origin feat/v0.7.0-target-admission
 | 修 `_build_pyz.py` 的 `__pycache__` 泄漏 | pyz 157,418 → **85,512 字节**，远端 CI 脚本判定 `OK (21 files, no bytecode)` |
 | 修 `pyproject.toml` 的 `package-data` | wheel 现含 `detector_config/detector.yaml`，干净安装实测 `yaml installed: ['detector.yaml']` |
 | 新增 `tests/test_package_data.py` | 5 条测试；在坏 wheel 上**确认为失败**，修复后通过 |
-| 全量测试 | **399 passed / 3 skipped** |
-| 重新构建 dist | `tmaudit-0.7.0` 双包重建 |
-| 分析文档 | 本文件 + `TESTPYPI_UPLOAD.md` |
+| 全量测试 | **422 passed / 3 skipped** |
+| 重新构建 dist | `tmaudit-0.6.0` 双包重建 |
+| 分析文档 | 本文件 + `UPLOAD.md` |
 
 **未做**：git commit、git merge、git push、任何 PyPI/TestPyPI 上传。

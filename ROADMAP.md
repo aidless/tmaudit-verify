@@ -1,5 +1,5 @@
 # Roadmap
-> ⚠️ 本 ROADMAP 停留在 v0.1.x 时期的规划；v0.1.0–v0.5.0 均已发布，最新状态见 [CHANGELOG.md](CHANGELOG.md)。
+> ⚠️ 本 ROADMAP 的规划部分停留在 v0.1.x 时期；v0.1.0–v0.6.0 均已发布，最新状态见 [CHANGELOG.md](CHANGELOG.md)。v0.7.0 起为尚未开始的计划。
 
 This document describes the planned future direction of
 `tmaudit`. It is **not a commitment** — features may be
@@ -143,7 +143,7 @@ v0.4.0 changelog. Published on
 
 **Theme**: First minor release after the plugin API ships.
 Absorb community feedback; allow breaking changes to the
-plugin API before the v0.6.0 lock.
+plugin API before the v0.7.0 lock.
 
 Shipped features (this release):
 1. ✅ **`c11_plugins_enabled` (whitelist mode)** — per-paper
@@ -155,7 +155,7 @@ Shipped features (this release):
    Bug 15 (whitelist branch disabled) and Bug 16
    (precedence swap) added to `_check_all_regressions.py`.
 
-Deferred to v0.5.1 or v0.6.0:
+Deferred to v0.5.1 or v0.7.0:
 - Plugin configuration schema validator (JSON Schema).
 - Plugin hot-reload (dev-only) — `tmaudit plugins reload`.
 - Async plugins (preview) — `async def check()` shape.
@@ -171,10 +171,34 @@ See [`RELEASE_NOTES_v0.5.0.md`](./RELEASE_NOTES_v0.5.0.md)
 for the v0.5.0 changelog. (GitHub release tag will be
 created in a follow-up release-process commit.)
 
-### v0.6.0 — PLANNED (≤ 2026-12)
+### v0.6.0 — DONE (released 2026-10-24)
+
+**Theme**: Audit a paper the rulepack was not written for.
+
+Shipped features (this release):
+1. ✅ **`verify --target FILE`** — a six-line TOML/JSON config next to
+   any manuscript forks a custom verify script. Unknown keys are errors
+   with a `difflib` suggestion, not silent no-ops.
+2. ✅ **`Target` protocol** — plugins can be handed a document object
+   instead of a bare `tex` string; old plugins keep working unchanged.
+3. ✅ **`admission`** — certifies a self-evolving-harness gain against
+   arXiv:2610.18813 eq. (8)/(9), including the eq. (8) inversion
+   (`--required-tasks`) and the retention ledger of eq. (6).
+4. ✅ **`--paper-dir` + generic fork** (merged from the 0.5.x line) —
+   audit a directory with no per-paper config; the root `.tex` is
+   detected at runtime and `.bbl` is accepted as a bibliography.
+5. ✅ **Exit code 3** — "ran, but a category could not be observed" is
+   now distinct from "crashed" (2) and "found nothing" (0).
+
+DOD: 422 tests passing; the same 25-paper arXiv corpus that scored
+21/25 in v0.5.1 completes 25/25 through `--target` with 0 aborts.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full entry.
+
+### v0.7.0 — PLANNED (≤ 2026-12)
 
 **Theme**: API lock. Last release that can break the
-plugin API. After v0.6.0, only additive changes.
+plugin API. After v0.7.0, only additive changes.
 
 Lock-day changes:
 1. Plugin `__version__` is required (no default). Plugins
@@ -189,7 +213,7 @@ Lock-day changes:
 DOD: 16/16 meta-test caught (added Bug 15 + Bug 16); 3
 successful `tmaudit audit-all` runs on 3 different papers.
 
-### v0.7.0 — PLANNED (≤ 2027-02)
+### v0.8.0 — PLANNED (≤ 2027-04)
 
 **Theme**: Polish. Performance + documentation + 10-paper
 support. No API changes.
@@ -216,30 +240,30 @@ begins.
 |---|---|
 | All 10 audit categories (C1..C10) implemented | `tmaudit list` shows 10 categories. ✅ done in v0.3.0. |
 | Plugin API ships | `tmaudit plugins list` shows ≥ 1 plugin. ✅ done in v0.4.0. |
-| At least 10 papers supported out-of-the-box | `tmaudit list` shows ≥ 10 papers. Currently 5. ⏳ pending v0.7.0. |
+| At least 10 papers supported out-of-the-box | `tmaudit list` shows ≥ 10 papers. Currently 5. ⏳ pending v0.8.0. |
 | API stable (no breaking changes for 6 months) | `git diff v1.0.0..HEAD -- src/tmaudit/plugins.py` shows zero public-symbol renames or deletions. ⏳ freezes at v1.0.0. |
-| Performance: < 1 second per paper, including cache | `time tmaudit verify --paper 1` reports < 1s. ⏳ pending v0.7.0. |
-| Full API reference | `docs/api/` has a generated reference for every public symbol. ⏳ pending v0.7.0. |
-| Contributor guide updated | `docs/PLUGIN_AUTHOR_GUIDE.md` exists. ⏳ pending v0.7.0. |
-| 3 tutorial videos | Live on the project website. ⏳ pending v0.7.0. |
+| Performance: < 1 second per paper, including cache | `time tmaudit verify --paper 1` reports < 1s. ⏳ pending v0.8.0. |
+| Full API reference | `docs/api/` has a generated reference for every public symbol. ⏳ pending v0.8.0. |
+| Contributor guide updated | `docs/PLUGIN_AUTHOR_GUIDE.md` exists. ⏳ pending v0.8.0. |
+| 3 tutorial videos | Live on the project website. ⏳ pending v0.8.0. |
 | Used in ≥ 3 real submission cycles | Self-reported by 3 different TMLR / NeurIPS / ICLR submitters. ⏳ **long pole** — drives the calendar. |
 
 ### Plugin API freeze window
 
-The plugin API is **frozen at v0.6.0** (not v0.4.0). v0.4.0
+The plugin API is **frozen at v0.7.0** (not v0.4.0). v0.4.0
 is the first release that ships the API, but breaking
-changes are still allowed until v0.6.0:
+changes are still allowed until v0.7.0:
 
 - **v0.4.x (now)**: API is *introduced*. Patch releases may
   add fields, deprecate (not remove) methods.
 - **v0.5.0**: First minor release with the API. Breaking
   changes allowed (still 0.x phase).
-- **v0.6.0**: API is *locked*. From v0.6.0 onward, only
+- **v0.7.0**: API is *locked*. From v0.7.0 onward, only
   additive changes (new fields, new methods, new
   subcommands) are allowed.
 - **v1.0.0**: API is *frozen* (no changes for 6 months).
 
-**What's frozen at v0.6.0** (the public surface):
+**What's frozen at v0.7.0** (the public surface):
 
 | Module | Public symbols |
 |---|---|
@@ -265,8 +289,8 @@ their internals are not.**
 | v0.4.1 | 2026-08-10 | Patch (community bug fixes + PyPI) | CI failure log |
 | v0.4.2 | 2026-09-10 | Patch (if needed) | CI failure log |
 | v0.5.0 | 2026-10-10 | First minor (community feedback) | GitHub issues |
-| v0.6.0 | 2026-12-10 | API lock | `_check_all_regressions.py` |
-| v0.7.0 | 2027-02-10 | Polish (perf + docs + 10 papers) | `bench/` + `tmaudit list` |
+| v0.7.0 | 2026-12-10 | API lock | `_check_all_regressions.py` |
+| v0.8.0 | 2027-04-10 | Polish (perf + docs + 10 papers) | `bench/` + `tmaudit list` |
 | **v1.0.0** | **2027-04-10** | First stable release | 3 submission cycles |
 
 Total: 9 months from v0.4.0 to v1.0.0. The 3-month
@@ -314,8 +338,8 @@ To manage expectations:
   v1.0 just means the next 6 months have no breaking
   changes.
 - v1.0.0 is not "ready for every workflow". PyPI install
-  ships in v0.4.1; 10-paper support in v0.7.0; tutorial
-  videos in v0.7.0. v1.0.0 is the **combination** of all
+  ships in v0.4.1; 10-paper support in v0.8.0; tutorial
+  videos in v0.8.0. v1.0.0 is the **combination** of all
   of these.
 - v1.0.0 is not "abandoned". After v1.0.0 we ship v1.1,
   v1.2 on the same 2-month cadence. v1.0 is the
