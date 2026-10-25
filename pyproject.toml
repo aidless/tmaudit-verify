@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tmaudit"
-version = "0.7.0"
+version = "0.6.0"
 description = "Config-driven TMLR paper audit + LaTeX compile pipeline"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -103,11 +103,11 @@ tmaudit = [
     "templates/*.py",
     "templates/*.tex",
     "configs/*.py",
-    # detector_config/detector.yaml is read at runtime. Without it here, a
-    # non-editable install -- the path every `pip install tmaudit` user takes
-    # -- silently falls back to the built-in defaults, so the shipped wheel
-    # behaves differently from the source tree it was built from. Editable
-    # installs read straight from src/ and hide the omission. Fixed
-    # independently on the other branch as release 0.5.2.
+    # detector_config/detector.yaml is read at runtime. Without it here,
+    # a non-editable install — the path every `pip install tmaudit` user
+    # takes — silently falls back to the built-in defaults, so the shipped
+    # wheel behaves differently from the source tree it was built from.
+    # Editable installs read straight from src/ and hide the omission.
+    # Found independently on both branches (0.5.2 and 0.7.0).
     "detector_config/*.yaml",
 ]

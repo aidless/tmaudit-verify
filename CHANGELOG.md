@@ -4,9 +4,7 @@ All notable changes to `tmaudit` are documented here.
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
-
-## [v0.7.0] — 2026-10-24
+## [v0.6.0] — 2026-10-24
 
 ### Added — `admission`: statistical certificates for self-evolving harness claims
 
@@ -59,7 +57,7 @@ a round-trip property test (`required_tasks` then `certify` must pass, and
 `m-1` must fail).
 
 ### Changed
-- Version bump to 0.7.0.
+- Version bump to 0.6.0.
 - `tmaudit --version` now works. Previously the top-level parser had no
   version flag, so `tmaudit --version` exited 2 with "the following
   arguments are required: command". Since reports embed `__version__` and
@@ -87,7 +85,7 @@ a round-trip property test (`required_tasks` then `certify` must pass, and
 This defect was found and fixed independently on the other development
 branch as release 0.5.2; see `DIVERGENCE_ANALYSIS.md`.
 
-## [v0.6.0] — 2026-10-24
+## [v0.5.3] — 2026-10-24
 
 ### Added — `verify --target FILE`: audit a paper you do not own
 
@@ -164,6 +162,78 @@ citing paper resolves a bibliography. Marked `slow`.
 | 1 | ran, HIGH finding present |
 | 2 | did not complete: missing input, or a check crashed |
 | 3 | ran, no crash, but at least one category could not be observed |
+
+## [v0.5.2] — 2026-10-24 (not yet on PyPI; publishing alongside v0.6.0)
+
+### Fixed
+
+- **The published wheel now ships `detector_config/detector.yaml`.** The file
+  was absent from the built distribution because `package-data` did not list
+  `detector_config/*.yaml`. A non-editable install — the path every
+  `pip install tmaudit` user takes — therefore fell back to the built-in
+  defaults, and `tests/test_detector_config.py` failed against the installed
+  package. Editable installs masked the omission.
+- **A relative `--paper-dir` was resolved twice.** The forked script was
+  written to `paper/verify_generic.py` and then launched with `cwd=paper`, so a
+  relative path became `paper/paper/verify_generic.py`. `fork_*` now resolves
+  the directory first; a regression test covers the relative-path invocation.
+
+### Changed
+
+- **README rewritten around the external user**: a one-command quick start, a
+  real excerpt of the output, and an explicit statement that C1–C3/C6 are
+  per-paper while C4–C10 run on any manuscript. Added
+  `examples/sample-paper/` so the documented command has a runnable target.
+
+### Added
+
+- **`tmaudit verify --paper-dir DIR` without `--paper`** runs the generic
+  checks on an arbitrary manuscript: `forge.fork_verify_generic()` forks
+  the factory template (empty `CHECKS_CONFIG`) into `DIR`, so the per-paper
+  categories (C1/C2/C3/C6) report *not applicable* and the generic
+  categories run. No `--main` flag is needed — the root `.tex` is located by
+  name (`main.tex`) or, failing that, as the sole `.tex` declaring
+  `\begin{document}` (`forge.find_main_tex`). `plugins run --paper-dir` uses
+  the same resolution, so a plugin can audit a directory whose root file is
+  not `main.tex`.
+- **Bibliography from a compiled `.bbl`.** C4 reads cite keys from
+  `refs.bib` (`@type{key,`) *or* a `.bbl` (`\bibitem[label]{key}`) through
+  the new `_bib_keys` helper; a paper that ships only its `.bbl`, as arXiv
+  submissions often do, no longer needs a `refs.bib` for its citations to
+  be checked.
+- **`case-studies/arxiv-2502.14074/`** — the generic path plus two
+  `requires_config=False` plugin checks (`claims-significance-no-test`,
+  `claims-percent-table-no-uncertainty`) run against one real paper, every
+  input pinned by SHA-256. The checks ship as an installable plugin package
+  (`case-studies/arxiv-2502.14074/tmaudit_claims_plugin/`).
+
+### Fixed
+
+- **C4 no longer aborts the whole audit when no bibliography is present.**
+  `main()` used to `return 2` when `refs.bib` was missing. With neither a
+  `.bib` nor a `.bbl`, C4 now reports **not applicable** and the remaining
+  categories still run; a genuinely absent manuscript `.tex` is still exit
+  2. Surfaced by the arbitrary-paper path: the subject paper ships no
+  `.bib`.
+- **C9 caption extraction handles nested braces.** The brace-bounded regex
+  `\\caption\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}` accepted only one nesting
+  level, so a figure whose caption nested twice — e.g.
+  `\caption{\textbf{... \textsc{Swim} ...}}` or
+  `\caption{\textcolor[HTML]{2f70b8}{{Llama-3-70B}} ...}` — was reported as
+  having **no caption** (a HIGH false positive). Caption extraction is now
+  a balanced-brace scan (`_c9_balanced_content`), with regression tests for
+  both nested forms and for a genuinely unbalanced group. Found by auditing
+  arXiv:2502.14074 (see `case-studies/arxiv-2502.14074/`).
+- **C4's missing-key message** now reads "missing from the bibliography
+  (.bib/.bbl)" instead of naming `refs.bib`, which is inaccurate once the
+  source may be a `.bbl`.
+
+### Changed
+
+- **Test count: 246 → 262** (fast suite, `pytest -m "not slow"`). Added
+  `tests/test_verify_paper_dir.py` (13 tests) and three nested-brace
+  regression tests in `tests/test_c9_figure_caption.py`. The `README.md`
+  test badge is updated to 262 to match.
 
 ## [v0.5.1] — 2026-10-16
 
@@ -277,71 +347,6 @@ All six defects were found by auditing this tool's own template against
 - No CLI changes; `cmd_audit_all` reads `c11_plugins_enabled`
   from the paper config (no new flag in v0.5.0).
 
-## [Unreleased]
-
-Two enhancement issues are open and ready for community
-contribution. See [`.github/issues/16-c7-citation-context.md`](./.github/issues/16-c7-citation-context.md)
-and [`.github/issues/17-audit-cache.md`](./.github/issues/17-audit-cache.md)
-for the full proposals, and [`ROADMAP.md`](./ROADMAP.md) for
-the planned release timeline.
-
-| Issue | Title | Effort | Status |
-|---|---|---|---|
-| #16 | C7 audit category (citation context) | Medium | Ready for PR |
-| #17 | Audit-cache layer | Medium | Ready for PR |
-
-### Added (templates)
-
-- **`.github/ISSUE_TEMPLATE/docs.md`** — 14-section template
-  for documentation-only issues (typos, clarifications, new
-  sections, restructures, translations). Distinct from
-  `enhancement.md` (which is for code changes that improve
-  existing features). The new template asks for a "rendered
-  output (before vs after)" section, a "spell / grammar /
-  style check" list, a "link / cross-reference check" list,
-  and a "backwards compatibility" check. 72 checkboxes total
-  (most of any template). Auto-applies `documentation` +
-  `needs-triage` labels.
-- **`.github/ISSUE_TEMPLATE/enhancement.md`** (already
-  added in v0.1.1) — 13-section template for enhancement
-  issues. 35 checkboxes. Auto-applies `enhancement` +
-  `needs-triage` labels.
-- **`.github/ISSUE_TEMPLATE/config.yml`** (updated) —
-  comments now mention the 4 templates and explain the
-  bug-vs-feature-vs-enhancement-vs-docs distinction.
-- **`_demo_c7_enhancement_filled.md`** — example of a C6
-  threshold enhancement issue filled out using
-  `enhancement.md`.
-- **`_demo_docs_filled.md`** — example of a 1-word typo
-  fix filled out using `docs.md` (shows that the template
-  is fast to fill for trivial changes).
-
-### Added (CI integration)
-
-- **`_check_github_templates.py`** — community-files validator
-  that runs in CI. Validates 9 dimensions:
-  1. `.github/` directory structure
-  2. `ISSUE_TEMPLATE/config.yml` (YAML, blank_issues,
-     contact_links)
-  3. 4 issue templates (frontmatter, name, description,
-     title, labels, assignees, body)
-  4. `PULL_REQUEST_TEMPLATE.md` (H2 count, checkbox count,
-     mentions of "test" and "checklist")
-  5. `CODEOWNERS` (presence, rule count)
-  6. `dependabot.yml` (YAML, updates list)
-  7. `CODE_OF_CONDUCT.md` (presence, line count)
-  8. `SUPPORT.md` (presence, line count)
-  9. `workflows/*.yml` (YAML, name, on, jobs)
-  Supports `--strict` (warnings fail) and `--json` (machine-
-  readable output) flags. Currently 44/44 OK, 0 FAIL.
-- **`.github/workflows/ci.yml`** (updated) — added
-  `validate-community-files` job that runs the new
-  validator. Also writes JSON to
-  `community-files-validation.json` and uploads as a CI
-  artifact (retention 7 days). The job is independent of
-  the others (does not `need` them) so a YAML issue in
-  the workflow does not block the validator.
-
 ## [0.4.0] — 2026-07-10 (in progress)
 
 **Theme**: Plugin API. Ship the 4th (and final) audit-
@@ -442,6 +447,77 @@ write their own audit checks.
 
 - **Test count**: 176 → **218** (+42 tests).
 - **Meta-test**: 12/12 → **14/14** (Bug 13 + Bug 14).
+
+## [0.4.x maintenance] — after 0.4.0
+
+Work landed after 0.4.0 that never got a version number of its own:
+the docs issue template, the community-files validator, and the CI job
+that runs it. Listed here rather than under a version heading so the
+release history stays honest about what was actually tagged.
+
+Two enhancement issues are open and ready for community
+contribution. See [`.github/issues/16-c7-citation-context.md`](./.github/issues/16-c7-citation-context.md)
+and [`.github/issues/17-audit-cache.md`](./.github/issues/17-audit-cache.md)
+for the full proposals, and [`ROADMAP.md`](./ROADMAP.md) for
+the planned release timeline.
+
+| Issue | Title | Effort | Status |
+|---|---|---|---|
+| #16 | C7 audit category (citation context) | Medium | Ready for PR |
+| #17 | Audit-cache layer | Medium | Ready for PR |
+
+### Added (templates)
+
+- **`.github/ISSUE_TEMPLATE/docs.md`** — 14-section template
+  for documentation-only issues (typos, clarifications, new
+  sections, restructures, translations). Distinct from
+  `enhancement.md` (which is for code changes that improve
+  existing features). The new template asks for a "rendered
+  output (before vs after)" section, a "spell / grammar /
+  style check" list, a "link / cross-reference check" list,
+  and a "backwards compatibility" check. 72 checkboxes total
+  (most of any template). Auto-applies `documentation` +
+  `needs-triage` labels.
+- **`.github/ISSUE_TEMPLATE/enhancement.md`** (already
+  added in v0.1.1) — 13-section template for enhancement
+  issues. 35 checkboxes. Auto-applies `enhancement` +
+  `needs-triage` labels.
+- **`.github/ISSUE_TEMPLATE/config.yml`** (updated) —
+  comments now mention the 4 templates and explain the
+  bug-vs-feature-vs-enhancement-vs-docs distinction.
+- **`_demo_c7_enhancement_filled.md`** — example of a C6
+  threshold enhancement issue filled out using
+  `enhancement.md`.
+- **`_demo_docs_filled.md`** — example of a 1-word typo
+  fix filled out using `docs.md` (shows that the template
+  is fast to fill for trivial changes).
+
+### Added (CI integration)
+
+- **`_check_github_templates.py`** — community-files validator
+  that runs in CI. Validates 9 dimensions:
+  1. `.github/` directory structure
+  2. `ISSUE_TEMPLATE/config.yml` (YAML, blank_issues,
+     contact_links)
+  3. 4 issue templates (frontmatter, name, description,
+     title, labels, assignees, body)
+  4. `PULL_REQUEST_TEMPLATE.md` (H2 count, checkbox count,
+     mentions of "test" and "checklist")
+  5. `CODEOWNERS` (presence, rule count)
+  6. `dependabot.yml` (YAML, updates list)
+  7. `CODE_OF_CONDUCT.md` (presence, line count)
+  8. `SUPPORT.md` (presence, line count)
+  9. `workflows/*.yml` (YAML, name, on, jobs)
+  Supports `--strict` (warnings fail) and `--json` (machine-
+  readable output) flags. Currently 44/44 OK, 0 FAIL.
+- **`.github/workflows/ci.yml`** (updated) — added
+  `validate-community-files` job that runs the new
+  validator. Also writes JSON to
+  `community-files-validation.json` and uploads as a CI
+  artifact (retention 7 days). The job is independent of
+  the others (does not `need` them) so a YAML issue in
+  the workflow does not block the validator.
+
 
 ## [0.3.0] — 2026-07-10 (in progress)
 

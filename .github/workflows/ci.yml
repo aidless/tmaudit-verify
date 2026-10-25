@@ -19,15 +19,27 @@ concurrency:
 
 jobs:
   # --------------------------------------------------------------------------
-  # Job 1: install tmaudit, run the 240-test pytest suite, upload JUnit XML
+  # Job 1: install tmaudit, run the 263-test pytest suite, upload JUnit XML
   # --------------------------------------------------------------------------
   pytest:
     name: pytest (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        include:
+          # setup-python has no 3.9 build for ubuntu-26.04 (ubuntu-latest); pin the
+          # oldest supported interpreter to an image that still ships it.
+          - python-version: '3.9'
+            os: ubuntu-22.04
+          - python-version: '3.10'
+            os: ubuntu-latest
+          - python-version: '3.11'
+            os: ubuntu-latest
+          - python-version: '3.12'
+            os: ubuntu-latest
+          - python-version: '3.13'
+            os: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -58,6 +70,15 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
           python -m pip install -e ./tmaudit_example_plugin
+
+      - name: Build the wheel and sdist
+        # tests/test_package_data.py reads the *built wheel* rather than the source
+        # tree, because a file missing from the source tree is impossible while the
+        # opposite -- present in src/, absent from the wheel -- is exactly the bug it
+        # guards. Without this step those tests skip ("no wheel in dist/") and the
+        # packaging contract is never checked in CI. Building here also makes the
+        # sdist/wheel pair available to the twine check a later job could reuse.
+        run: python -m build
 
       - name: Run pytest
         # The two @pytest.mark.slow end-to-end tests fork a verify script and run the
@@ -122,6 +143,14 @@ jobs:
         # in production).
         run: |
           python _check_all_regressions.py
+
+      - name: Check the committed tmaudit.pyz is not stale
+        # Must run BEFORE the step below, which overwrites the archive.
+        # CI previously only rebuilt and smoke-ran the artifact, never
+        # comparing the result with what was committed -- so a v0.1.x-era
+        # archive (Python 3.9 bytecode; no plugins/cache/report/
+        # llm_fallback) sat in the repository unnoticed until v0.5.1.
+        run: python _check_pyz_fresh.py
 
       - name: Build tmaudit.pyz (smoke)
         run: |

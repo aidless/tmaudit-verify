@@ -1,31 +1,48 @@
-# tmaudit — Deploy & Quick Start
+# tmaudit
+
+**Catch the reporting defects reviewers catch — before you submit.**
+
+`tmaudit` audits the LaTeX source of a machine-learning paper for the things
+that get flagged in review but are cheap to fix: a missing code/data statement,
+unreported seeds and hyperparameters, a figure whose label is never referenced,
+ceremonial citations, and significance claims with no power analysis. No API
+key, no network, and no required dependencies.
 
 [![CI](https://github.com/aidless/tmaudit/actions/workflows/ci.yml/badge.svg)](https://github.com/aidless/tmaudit/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/tmaudit)](https://pypi.org/project/tmaudit/)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
-![Tests](https://img.shields.io/badge/tests-240%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-391%20passing-brightgreen)
 ![Meta--tests](https://img.shields.io/badge/meta--tests-14%2F14%20caught-success)
 ![Categories](https://img.shields.io/badge/audit%20categories-C1..C10-blue)
-![PR%20Checks](https://img.shields.io/badge/PR%20checks-40%20checkboxes-blueviolet)
+![PR%20Checks](https://img.shields.io/badge/PR%20checks-44%20checkboxes-blueviolet)
 ![Issues](https://img.shields.io/badge/issues-4%20templates-blueviolet)
 ![Security](https://img.shields.io/badge/security-policy%20in%20place-green)
-![Version](https://img.shields.io/badge/version-0.7.0-blue)
+![Version](https://img.shields.io/badge/version-0.6.0-blue)
 ![Roadmap](https://img.shields.io/badge/roadmap-through%20v0.5.0-green)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-This directory is a **deployable Python package** named `tmaudit`. It
-ships three things in one place:
+```bash
+pipx install tmaudit
+tmaudit verify --paper-dir path/to/your/paper
+```
 
-1. The **templates** for the three operational scripts that every
-   `PAPER<N>_CONSOLIDATED/` directory needs
-   (`verify_p<N>.py`, `_compile_check.py`,
-   `_fix_abstract_unicode.py`).
-2. The **per-paper configurations** (C1..C10 audit rules: C1–C7
-   in v0.1.0–v0.2.0, plus C8 statistical power, C9 figure-caption,
-   and C10 reproducibility in v0.3.0; abstract Unicode
-   replacements) for Paper 1, 2, 3, 4, 5.
-3. A **CLI** (`tmaudit`) that forks the templates into any paper
-   directory and (optionally) runs them.
+Excerpt of real output from a deliberately flawed sample manuscript
+([`examples/sample-paper/`](examples/sample-paper/)):
+
+```text
+Findings by category:
+  C9  [MEDIUM]  1 finding(s)
+  C10  [LOW]    5 finding(s)
+
+[MEDIUM] C9  (global)
+    MED: figure fig:unused is defined but never referenced in the body text
+    (no \ref{fig:unused} or \autoref{fig:unused}). Reviewer §5 #9.
+
+[LOW] C10  (global)
+    HIGH: paper has no code/data availability statement (no
+    \section{...Availability...}, no GitHub/GitLab/Zenodo URL, and no
+    "code is available" phrase). Reviewer §5 #10.
+```
 
 ## Four ways to use it
 
@@ -76,7 +93,7 @@ python tmaudit.pyz audit-all
 ```
 
 The `.pyz` is a self-extracting Python zip archive; the user does not
-need to `pip install` anything. The file is `~46 KB` and contains all
+need to `pip install` anything. The file is `~87 KB` and contains all
 five `PAPER_CONFIGS` and all three templates.
 
 This is the **recommended distribution form** for handing the tool
@@ -84,11 +101,13 @@ to a co-author or to the TMLR reviewers.
 
 ### (B) `pip install --editable .` (development)
 
-```powershell
-cd <your tmaudit checkout>
-python -m pip install --editable .
-tmaudit list
-tmaudit verify --paper 1
+```bash
+git clone https://github.com/aidless/tmaudit
+cd tmaudit
+python -m venv .venv && source .venv/bin/activate   # .venv\Scripts\activate on Windows
+pip install -e ".[dev]"
+pip install -e ./tmaudit_example_plugin   # the test suite expects this plugin
+python -m pytest -q
 ```
 
 Edits to `src/tmaudit/templates/*.py` or
@@ -119,7 +138,59 @@ Published on PyPI via trusted publishing (OIDC) from
 `.github/workflows/publish-pypi.yml`; new versions are cut from GitHub
 Releases. This is the quickest form for someone who just wants the CLI.
 
-## `tmaudit admission`: is a reported gain certifiable? (v0.7.0)
+## What it checks
+
+| Category | What it catches |
+|---|---|
+| **C4** | citations that do not resolve to a `.bib`/`.bbl` entry |
+| **C5** | sample size and effect-size omissions |
+| **C7** | ceremonial citations (cited, never engaged with) |
+| **C8** | significance claims without a reported effect size or power analysis |
+| **C9** | figures without a caption below the graphic; `fig:` labels never referenced |
+| **C10** | no availability statement; missing seeds, hyperparameters, hardware, library versions |
+| **C1–C3, C6** | per-paper rulepack for five specific manuscripts: symbol definition, Bonferroni consistency, formalization, hype vocabulary |
+
+C4–C10 run on any LaTeX manuscript. C1–C3 and C6 are configuration-driven and
+report **not applicable** on a paper the rulepack was not written for — that is
+stated in the output, not silently reported as a pass.
+
+## Scope, stated plainly
+
+This is not a reviewer and does not judge novelty. It checks reporting
+completeness against a fixed rulepack, and it tells you when a category did not
+run. For checks the generic categories do not cover, write a plugin
+([`docs/PLUGINS.md`](docs/PLUGINS.md)) — the contract is a function that
+receives the paper root and returns `Finding` objects.
+
+## Try it on the sample, no paper needed
+
+```bash
+git clone https://github.com/aidless/tmaudit
+cd tmaudit
+pipx install tmaudit          # or: pip install -e .
+tmaudit verify --paper-dir examples/sample-paper
+```
+
+`verify` forks a `verify_generic.py` script into the target directory and runs
+it. That file is the entire audit, in the open: read it, edit the thresholds, or
+delete it after the run. It is generated, not a hidden binary.
+
+## Extend it: your own checks
+
+A plugin is a package exposing a function decorated with `@check` under the
+`tmaudit.plugins` entry-point group. It receives the paper's root `.tex` and
+returns `Finding` objects.
+
+```bash
+tmaudit plugins list
+tmaudit plugins run my-check --paper-dir /path/to/your/paper
+```
+
+The full contract and a three-check example ship in
+[`tmaudit_example_plugin/`](tmaudit_example_plugin/) and
+[`docs/PLUGINS.md`](docs/PLUGINS.md).
+
+## `tmaudit admission`: is a reported gain certifiable? (v0.6.0)
 
 Paper audits ask whether a claim is *internally consistent*. A self-evolving
 harness claim needs a different question: the revision was **selected against
@@ -196,14 +267,14 @@ defects replay: [`case-studies/arxiv-corpus/`](case-studies/arxiv-corpus/README.
 has the coverage matrix, the method, and what the numbers do **not**
 establish.
 
-### Round two (v0.7.0): the same corpus through `--target`
+### Round two (v0.6.0): the same corpus through `--target`
 
 The v0.5.0 round ran through `PAPER_CONFIGS`, i.e. with configs the author
 had written. The honest follow-up is to run the *external* path — the one a
 stranger uses — over the same 25 sources, with a six-line config generated
 per paper and nothing else tuned:
 
-| Metric | v0.5.1 | v0.7.0 via `--target` |
+| Metric | v0.5.1 | v0.6.0 via `--target` |
 |---|---|---|
 | Papers completing the audit | 21 / 25 | **25 / 25** |
 | Papers aborting (exit 2) | 4 | **0** |
@@ -219,6 +290,18 @@ paper, which is why one hand-chosen paper would not have found any of them.
 
 Run install-free, from the built wheel, in an environment with no
 third-party packages.
+
+### Auditing a paper the rulepack was not written for
+
+[`case-studies/arxiv-2502.14074/`](case-studies/arxiv-2502.14074/README.md)
+runs the two public extension paths — `verify --paper-dir` and two plugin
+checks — against one real paper (*Investigating Non-Transitivity in
+LLM-as-a-Judge*, arXiv:2502.14074, ICML 2025). It reports two
+reporting-standards observations, records three candidate weaknesses that
+were checked and **withdrawn**, and surfaced a caption-parsing defect in
+the tool (nested braces), fixed in this commit. Every input is pinned by
+SHA-256; the results, and what the audit does **not** establish, are in its
+README.
 
 ## v0.3.0 highlights
 
@@ -266,7 +349,7 @@ tmaudit compile --paper N [--dry-run]     # fork _compile_check.py + 4-pass buil
 tmaudit fix-unicode --paper N [--dry-run] # fork _fix_abstract_unicode.py
 tmaudit audit-all [--start 1] [--end 5]   # verify all papers in a range
 tmaudit verify --target paper.toml        # audit a paper you do not own (v0.6.0)
-tmaudit admission --gain PP --tasks M     # certify a reported gain (v0.7.0)
+tmaudit admission --gain PP --tasks M     # certify a reported gain (v0.6.0)
 ```
 
 Every paper subcommand also accepts `--paper-dir PATH` to override the
@@ -293,11 +376,11 @@ tmaudit compile --paper N
 ```
 TEMPLATE/
 ├── pyproject.toml                            # build config
-├── tmaudit.pyz                               # single-file distribution (46 KB)
+├── tmaudit.pyz                               # single-file distribution (64 KB)
 ├── README.md                                 # this file
 ├── engineering_notes_verify_template.md      # 6-bug engineering diary
 ├── _setup_pkg.py                             # one-time: copy templates into src/
-├── _build_pyz.py                             # one-time: build tmaudit.pyz
+├── _build_pyz.py                             # rebuild tmaudit.pyz after any src/ change
 ├── _compile_appendix.py                      # LaTeX compile for the appendix
 ├── _regen_appendix.py                        # regenerate appendix_engineering.tex
 ├── _status.py                                # TEMPLATE/ state summary
@@ -344,7 +427,7 @@ tmaudit verify --paper 6   # fork + run; will report any HIGH-severity
 ```bash
 # On the source machine:
 python _build_pyz.py
-# -> tmaudit.pyz (46 KB)
+# -> tmaudit.pyz (64 KB)
 
 # Copy tmaudit.pyz to a fresh machine with no Python packages installed
 # (only a base Python 3.9+ interpreter):
@@ -386,11 +469,12 @@ It consists of **seven** jobs:
 
 1. **pytest** (matrix: Python 3.9, 3.10, 3.11, 3.12, 3.13 on
    `ubuntu-latest` — every version `requires-python >=3.9` claims)
-   — runs the **240-test** suite and uploads JUnit XML artifacts.
+   — runs the **246-test** suite and uploads JUnit XML artifacts.
 2. **meta-test** (Python 3.11) — runs `_check_all_regressions.py`
    to verify that each of the **14 regression tests** actually catches
-   its target bug. Builds `tmaudit.pyz` and runs it as a smoke
-   test.
+   its target bug, then runs `_check_pyz_fresh.py` to confirm the
+   committed `tmaudit.pyz` still matches `src/tmaudit/`, and finally
+   builds the archive and runs it as a smoke test.
 3. **validate-community-files** (Python 3.11) — runs
    `_check_github_templates.py` to verify the `.github/`
    directory structure (4 issue templates, PR template, CODEOWNERS,
@@ -413,17 +497,23 @@ To run the same checks locally before pushing:
 
 ```bash
 pip install -e . pytest pyflakes
+pip install -e ./tmaudit_example_plugin
 pytest
 python _check_all_regressions.py
+python _check_pyz_fresh.py
 python _build_pyz.py
 python tmaudit.pyz list
 python -m pyflakes src/tmaudit/ tests/
 ```
 
-`pytest` runs the full suite: **240 passed, 3 skipped** on a machine
-without the research tree — the two end-to-end audit tests require the
-real `PAPER<N>_CONSOLIDATED` papers and auto-skip when the directory is
-absent (point `TMAUDIT_RESEARCH_DIR` at the tree to run them).
+`pytest` runs the full suite: **246 passed, 3 skipped** on a machine
+without the research tree — the two `@pytest.mark.slow` end-to-end audit
+tests require the real `PAPER<N>_CONSOLIDATED` papers and auto-skip when
+the directory is absent (point `TMAUDIT_RESEARCH_DIR` at the tree to run
+them). **Scope note:** CI runs `pytest -m "not slow"`, which deselects
+those two and reports **246 passed, 1 skipped, 2 deselected** — both
+lines above are the same 249 collected tests, differing only in the two
+deselected slow tests.
 
 ### Local CI simulation (`act` / `_act_*`)
 
@@ -472,7 +562,7 @@ we have already executed successfully on the host:
 |---|---|
 | `python -m pip install -e .` | tmaudit installed ✅ |
 | `python -m pip install pytest scipy` | deps installed ✅ |
-| `python -m pytest -m "not slow"` | **240 passed, 1 skipped in ~5s** ✅ |
+| `python -m pytest -m "not slow"` | **246 passed, 1 skipped in ~5s** ✅ |
 | `python _check_all_regressions.py` | **14/14 bugs caught** ✅ |
 | `python _check_github_templates.py` | **44/44 OK** ✅ |
 | `python -m src.tmaudit audit-all ...` | audit-report.md generated ✅ |

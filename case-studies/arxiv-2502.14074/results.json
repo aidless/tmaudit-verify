@@ -1,0 +1,189 @@
+{
+  "archive_verified": true,
+  "arxiv_id": "2502.14074",
+  "generated_by": "case-studies/arxiv-2502.14074/audit_paper.py",
+  "generic_verify": {
+    "categories": {
+      "C1": {
+        "marker": "OK",
+        "n": 0,
+        "note": "not applicable: no per-paper config"
+      },
+      "C10": {
+        "marker": "LOW",
+        "n": 3,
+        "note": ""
+      },
+      "C2": {
+        "marker": "OK",
+        "n": 0,
+        "note": "not applicable: no per-paper config"
+      },
+      "C3": {
+        "marker": "OK",
+        "n": 0,
+        "note": "not applicable: no per-paper config"
+      },
+      "C4": {
+        "marker": "OK",
+        "n": 0,
+        "note": ""
+      },
+      "C5": {
+        "marker": "OK",
+        "n": 0,
+        "note": ""
+      },
+      "C6": {
+        "marker": "OK",
+        "n": 0,
+        "note": "not applicable: no per-paper config"
+      },
+      "C7": {
+        "marker": "MEDIUM",
+        "n": 10,
+        "note": ""
+      },
+      "C8": {
+        "marker": "OK",
+        "n": 0,
+        "note": ""
+      },
+      "C9": {
+        "marker": "OK",
+        "n": 0,
+        "note": ""
+      }
+    },
+    "exit_code": 0,
+    "findings": [
+      {
+        "category": "C7",
+        "location": "line 217",
+        "message": "MED: citation 'openai2019dota2largescale' at line 217 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C7",
+        "location": "line 500",
+        "message": "MED: citation 'jiang2023mistral' at line 500 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C7",
+        "location": "line 500",
+        "message": "MED: citation 'llama3' at line 500 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C7",
+        "location": "line 500",
+        "message": "MED: citation 'vicuna2023' at line 500 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C7",
+        "location": "line 500",
+        "message": "MED: citation 'zhu2024starlingb' at line 500 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C7",
+        "location": "line 552",
+        "message": "MED: citation 'chiang2024chatbotarenaopenplatform' at line 552 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C7",
+        "location": "line 554",
+        "message": "MED: citation 'li2024crowdsourceddatahighqualitybenchmarks' at line 554 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C7",
+        "location": "line 669",
+        "message": "MED: citation 'BT' at line 669 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C7",
+        "location": "line 778",
+        "message": "MED: citation 'NEURIPS2022_9d560961' at line 778 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C7",
+        "location": "line 780",
+        "message": "MED: citation 'cook2024tickingboxesgeneratedchecklists' at line 780 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.",
+        "severity": "MEDIUM"
+      },
+      {
+        "category": "C10",
+        "location": "global",
+        "message": "LOW: no hyperparameters reported (no \"learning rate\", \"batch size\", or \"optimizer\" found). Reviewer \u00a75 #10.",
+        "severity": "LOW"
+      },
+      {
+        "category": "C10",
+        "location": "global",
+        "message": "LOW: no random seed reported (no \"random seed\" or \"torch.manual_seed\" found). Reviewer \u00a75 #10.",
+        "severity": "LOW"
+      },
+      {
+        "category": "C10",
+        "location": "global",
+        "message": "LOW: no library version reported (no \"PyTorch 2\", \"TensorFlow 2\", or \"transformers 4\" found). Reviewer \u00a75 #10.",
+        "severity": "LOW"
+      }
+    ],
+    "stdout": "========================================================================\nPAPER AUDIT  (verify_generic.py)\n========================================================================\nSource: /tmp/tmaudit-2502.14074-c2crhlqw/paper.tex\nSize:   105,383 chars\nRefs:   44 entries in paper.bbl\n\nFindings by category:\n  C1  [OK]     0 finding(s)  [not applicable: no per-paper config]\n  C2  [OK]     0 finding(s)  [not applicable: no per-paper config]\n  C3  [OK]     0 finding(s)  [not applicable: no per-paper config]\n  C4  [OK]     0 finding(s)\n  C5  [OK]     0 finding(s)\n  C6  [OK]     0 finding(s)  [not applicable: no per-paper config]\n  C7  [MEDIUM]  10 finding(s)\n  C8  [OK]     0 finding(s)\n  C9  [OK]     0 finding(s)\n  C10  [LOW]    3 finding(s)\n\n------------------------------------------------------------------------\nDETAILED FINDINGS\n------------------------------------------------------------------------\n\n[MEDIUM] C7  (line 217)\n    MED: citation 'openai2019dota2largescale' at line 217 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[MEDIUM] C7  (line 500)\n    MED: citation 'jiang2023mistral' at line 500 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[MEDIUM] C7  (line 500)\n    MED: citation 'llama3' at line 500 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[MEDIUM] C7  (line 500)\n    MED: citation 'vicuna2023' at line 500 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[MEDIUM] C7  (line 500)\n    MED: citation 'zhu2024starlingb' at line 500 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[MEDIUM] C7  (line 552)\n    MED: citation 'chiang2024chatbotarenaopenplatform' at line 552 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[MEDIUM] C7  (line 554)\n    MED: citation 'li2024crowdsourceddatahighqualitybenchmarks' at line 554 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[MEDIUM] C7  (line 669)\n    MED: citation 'BT' at line 669 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[MEDIUM] C7  (line 778)\n    MED: citation 'NEURIPS2022_9d560961' at line 778 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[MEDIUM] C7  (line 780)\n    MED: citation 'cook2024tickingboxesgeneratedchecklists' at line 780 is ceremonial (citing sentence does not engage with the cited work: no engage verb, no comparison, no elaboration >= 30 words). 12 ceremonial cite(s) total (threshold: 2). Reviewer \u00a75 #6.\n\n[LOW] C10  (global)\n    LOW: no hyperparameters reported (no \"learning rate\", \"batch size\", or \"optimizer\" found). Reviewer \u00a75 #10.\n\n[LOW] C10  (global)\n    LOW: no random seed reported (no \"random seed\" or \"torch.manual_seed\" found). Reviewer \u00a75 #10.\n\n[LOW] C10  (global)\n    LOW: no library version reported (no \"PyTorch 2\", \"TensorFlow 2\", or \"transformers 4\" found). Reviewer \u00a75 #10.\n\n========================================================================\nTOTAL: 13 findings (HIGH=0, MEDIUM=10, LOW=3)\n========================================================================\n[WRITE] /tmp/tmaudit-2502.14074-c2crhlqw/verify_generic.py (76,619 chars)\n"
+  },
+  "inputs": {
+    "00README.json": "e0af71588146f08720f378e5f8b5d105deb43948087ab4a276074e6624e68f03",
+    "paper.bbl": "e390cadd2074530fb2bdd2bccc5fcb773795d0c7d401652c22d5941df65defa5",
+    "paper.bst": "0ec3d5eb9b02efb7e0b44a32f3775882f42a743d0bdc618f34e6936309b98764",
+    "paper.sty": "7e2da20baa491f918a21545296d86a2840c526c0dfa43933b1bd0f0b812181af",
+    "paper.tex": "d289584a23be41cdf129ee2899ee1a2777a0492bc0759aa01d0c0581b98a3e87",
+    "src.tar.gz": "5bf88239635fe93358b3ea13947dd7187d81859a08898262ee483c560abd2e77"
+  },
+  "plugin_findings": {
+    "claims-percent-table-no-uncertainty": {
+      "exit_code": 0,
+      "findings": [
+        {
+          "category": "CLAIM-INTERVAL",
+          "line": 416,
+          "message": "Table at line 416 reports 16 percentage value(s) with no uncertainty marker, though the document reports intervals elsewhere. Caption: \"Correlation comparison between the round-robin-based framework and AlpacaEval, with and without length control (LC).\". A point estimate cannot distinguish signal from resampling noise. Reporting-standards observation, not a claim that the numbers are wrong.",
+          "severity": "MEDIUM"
+        },
+        {
+          "category": "CLAIM-INTERVAL",
+          "line": 827,
+          "message": "Table at line 827 reports 6 percentage value(s) with no uncertainty marker, though the document reports intervals elsewhere. Caption: \"Comparison between Round Robin based framework with Bradley-Terry model and AlpacaEval 2.0.\". A point estimate cannot distinguish signal from resampling noise. Reporting-standards observation, not a claim that the numbers are wrong.",
+          "severity": "MEDIUM"
+        },
+        {
+          "category": "CLAIM-INTERVAL",
+          "line": 882,
+          "message": "Table at line 882 reports 40 percentage value(s) with no uncertainty marker, though the document reports intervals elsewhere. Caption: \"Evaluation Results of LLMs in Fully Style-Controlled Chatbot Arena, Round-Robin Tournament and AlpacaEval.\". A point estimate cannot distinguish signal from resampling noise. Reporting-standards observation, not a claim that the numbers are wrong.",
+          "severity": "MEDIUM"
+        }
+      ],
+      "stdout": "[MEDIUM] CLAIM-INTERVAL L416: Table at line 416 reports 16 percentage value(s) with no uncertainty marker, though the document reports intervals elsewhere. Caption: \"Correlation comparison between the round-robin-based framework and AlpacaEval, with and without length control (LC).\". A point estimate cannot distinguish signal from resampling noise. Reporting-standards observation, not a claim that the numbers are wrong.\n[MEDIUM] CLAIM-INTERVAL L827: Table at line 827 reports 6 percentage value(s) with no uncertainty marker, though the document reports intervals elsewhere. Caption: \"Comparison between Round Robin based framework with Bradley-Terry model and AlpacaEval 2.0.\". A point estimate cannot distinguish signal from resampling noise. Reporting-standards observation, not a claim that the numbers are wrong.\n[MEDIUM] CLAIM-INTERVAL L882: Table at line 882 reports 40 percentage value(s) with no uncertainty marker, though the document reports intervals elsewhere. Caption: \"Evaluation Results of LLMs in Fully Style-Controlled Chatbot Arena, Round-Robin Tournament and AlpacaEval.\". A point estimate cannot distinguish signal from resampling noise. Reporting-standards observation, not a claim that the numbers are wrong.\n"
+    },
+    "claims-significance-no-test": {
+      "exit_code": 0,
+      "findings": [
+        {
+          "category": "CLAIM-SIG",
+          "line": 211,
+          "message": "10 use(s) of \"significant/significantly\" on 9 line(s) [211, 288, 327, 369, 401, 408, 662, 722] (+1 more), but the document reports no p-value, bootstrap, permutation test, or significance test anywhere. A significance word reads as an inferential claim; with no test standard in the paper, the reader cannot tell which uses are statistical. Reporting-standards observation, not a claim that the results are wrong.",
+          "severity": "MEDIUM"
+        }
+      ],
+      "stdout": "[MEDIUM] CLAIM-SIG L211: 10 use(s) of \"significant/significantly\" on 9 line(s) [211, 288, 327, 369, 401, 408, 662, 722] (+1 more), but the document reports no p-value, bootstrap, permutation test, or significance test anywhere. A significance word reads as an inferential claim; with no test standard in the paper, the reader cannot tell which uses are statistical. Reporting-standards observation, not a claim that the results are wrong.\n"
+    }
+  },
+  "title": "Investigating Non-Transitivity in LLM-as-a-Judge",
+  "tmaudit_version": "0.5.1"
+}

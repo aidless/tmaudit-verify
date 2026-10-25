@@ -26,8 +26,10 @@ The ten categories of checks are:
         has a formal definition (matching CHECKS_CONFIG['c3_formal'])
         before being used qualitatively.
   C4  Citation hygiene (generic)
-      - Every \\cite{...} key in main.tex must have a corresponding
-        @...{key,...} entry in refs.bib.
+      - Every \\cite{...} key in the manuscript must have a
+        corresponding entry in the bibliography, read from refs.bib
+        (@...{key,...}) or a compiled .bbl (\\bibitem[l]{key}). When
+        neither source is present, C4 is reported as not applicable.
       - Self-cite rate must be below the threshold declared in
         CHECKS_CONFIG['c4_self_cite_threshold'].
   C5  Sample size and effect-size transparency (generic)
@@ -60,8 +62,10 @@ The ten categories of checks are:
 Exit codes:
     0 = no HIGH-severity findings
     1 = at least one HIGH-severity finding
-    2 = operational error (missing input file, or a check that
-        crashed — a crashed check is not a passed check)
+    2 = operational error (no manuscript .tex found, or a check that
+        crashed — a crashed check is not a passed check). A missing
+        bibliography is NOT an operational error: C4 degrades to
+        "not applicable" instead.
 """
 from __future__ import annotations
 import re
@@ -171,16 +175,6 @@ SEVERITY = {
 }
 
 
-# Categories that could not be *observed* on this document, e.g. C1 on a
-# paper with no \begin{abstract}. Distinct from both "ran and found
-# nothing" (the check passed) and "crashed" (the check is broken): an
-# observation failure is the paper's shape preventing the measurement,
-# and it must be visible in the report so an unread category is never
-# mistaken for a clean one. Populated by the check functions, consumed
-# and printed by main().
-OBSERVATION_FAILURES: dict[str, str] = {}
-
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -212,16 +206,14 @@ def check_c1_abstract_definitions(tex: str) -> list[tuple[str, str, int]]:
 
     abs_result = extract_abstract(tex)
     if abs_result is None:
-        # v0.5.1 (defect D6): "no abstract" is an observation failure,
-        # not a violation — it used to be reported as a HIGH finding.
+        # v0.5.1 (defect D6): "no abstract" is an observation failure, not a
+        # violation — it used to be reported as a HIGH finding.
         #
-        # v0.6.0: this used to raise, which made main() exit 2 and
-        # label the *whole* audit crashed — a defensible position for the
-        # author's own papers, where an abstract is a precondition, but
-        # wrong for an external document, where a missing abstract says
-        # nothing about the other nine categories. Recorded as an
-        # observation failure (printed as [n/a], counted in
-        # observation_failures) and returned as no findings: C1 could not
+        # Raising here made main() exit 2 and label the *whole* audit crashed.
+        # That is defensible for the author's own papers, where an abstract is
+        # a precondition, but wrong for an external document: a missing
+        # abstract says nothing about the other nine categories. Recorded as
+        # an observation failure and returned as no findings — C1 could not
         # see, so it does not claim the paper passed C1 either.
         OBSERVATION_FAILURES['C1'] = (
             'no abstract environment found: C1 cannot be observed')
@@ -381,6 +373,9 @@ _BIB_KEY_RE = re.compile(r'@\w+\{\s*([^,\s]+)\s*,')
 # or \bibitem{smith2020}. arXiv source tarballs ship the .bbl and usually NOT
 # the .bib, so a C4 that only understands BibTeX reports every cite key as
 # missing on exactly the papers most likely to be audited by a stranger.
+#
+# The optional label can wrap across lines (natbib) and can itself contain
+# brackets ([see [Smith 2020]]), so it cannot be matched with [^\]]* alone.
 _BBL_KEY_RE = re.compile(
     r'\\bibitem\s*(?:\[(?:[^\]\[]|\[[^\]]*\])*\])?\s*\{\s*([^}\s]+)\s*\}',
     re.DOTALL,
@@ -395,12 +390,11 @@ def _bib_keys(bib: str) -> set[str]:
     neither yields the empty set, which C4 reports as "every key missing"
     rather than silently passing.
     """
-    keys = set(_BIB_KEY_RE.findall(bib))
-    keys |= set(_BBL_KEY_RE.findall(bib))
-    return keys
+    return set(_BIB_KEY_RE.findall(bib)) | set(_BBL_KEY_RE.findall(bib))
 
-
-def check_c4_citation_hygiene(tex: str, bib: str) -> list[tuple[str, str, int]]:
+def check_c4_citation_hygiene(
+    tex: str, bib: str | None,
+) -> list[tuple[str, str, int]]:
     findings: list[tuple[str, str, int]] = []
 
     cite_keys: list[str] = []
@@ -410,24 +404,31 @@ def check_c4_citation_hygiene(tex: str, bib: str) -> list[tuple[str, str, int]]:
             if k and not any(c in k for c in '$&'):
                 cite_keys.append(k)
 
-    bib_keys = _bib_keys(bib)
     cited_keys = set(cite_keys)
 
-    missing = cited_keys - bib_keys
-    if missing:
-        first_missing_line = -1
-        for k in sorted(missing):
-            m = re.search(r'\\cite[a-zA-Z]*\{[^}]*\b' + re.escape(k) + r'\b', tex)
-            if m:
-                ln = line_of(tex, m.start())
-                if first_missing_line < 0 or ln < first_missing_line:
-                    first_missing_line = ln
-        findings.append((
-            'C4',
-            f'{len(missing)} cite key(s) in main.tex missing from refs.bib: '
-            f'{sorted(missing)[:5]}{"..." if len(missing) > 5 else ""}',
-            first_missing_line,
-        ))
+    # The missing-key sub-check needs a bibliography to compare against.
+    # `bib` is None when the paper ships neither a .bib nor a .bbl; main()
+    # reports C4 as not applicable in that case instead of calling us, but
+    # we still tolerate None so a direct call degrades to the self-cite
+    # sub-check rather than raising.
+    if bib is not None:
+        missing = cited_keys - _bib_keys(bib)
+        if missing:
+            first_missing_line = -1
+            for k in sorted(missing):
+                m = re.search(
+                    r'\\cite[a-zA-Z]*\{[^}]*\b' + re.escape(k) + r'\b', tex)
+                if m:
+                    ln = line_of(tex, m.start())
+                    if first_missing_line < 0 or ln < first_missing_line:
+                        first_missing_line = ln
+            findings.append((
+                'C4',
+                f'{len(missing)} cite key(s) in the manuscript missing from '
+                f'the bibliography (.bib/.bbl): '
+                f'{sorted(missing)[:5]}{"..." if len(missing) > 5 else ""}',
+                first_missing_line,
+            ))
 
     # Self-citation hygiene. Needs c4_self_cite_prefix: without it the
     # check cannot know what a self-cite looks like, so this sub-check
@@ -1508,11 +1509,43 @@ _C9_FIGURE_RE = re.compile(
     r'\\begin\{figure\*?\}.*?\\end\{figure\*?\}',
     re.DOTALL,
 )
-# Pattern for \caption{...}. Captures the position and the content.
-_C9_CAPTION_RE = re.compile(
-    r'\\caption\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}',
-    re.DOTALL,
-)
+# \caption{...} cannot be matched with a brace-bounded regex once its
+# content nests braces, which real captions do:
+#
+#     \caption{\textbf{Rankings ... \textsc{Swim} tournaments ...}}
+#     \caption{\textcolor[HTML]{2f70b8}{{Llama-3-70B}} are used ...}
+#
+# Both have two brace levels. The earlier pattern
+# `\\caption\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}` accepted only one, so a
+# figure that *did* carry a caption was reported as having none. (Found
+# by auditing arXiv:2502.14074 — see case-studies/arxiv-2502.14074/.)
+# The content is extracted by a brace-counting scan instead.
+def _c9_balanced_content(text: str, open_pos: int) -> tuple[str, int] | None:
+    r"""Return ``(content, index_after_close)`` for the ``{...}`` group.
+
+    ``open_pos`` is the index of the opening brace. Nested braces are
+    counted, and an escaped char (``\{``, ``\}``) is skipped so it does
+    not disturb the depth. Returns None when the group never closes.
+    """
+    if open_pos >= len(text) or text[open_pos] != '{':
+        return None
+    depth = 0
+    i = open_pos
+    while i < len(text):
+        c = text[i]
+        if c == '\\' and i + 1 < len(text):
+            i += 2
+            continue
+        if c == '{':
+            depth += 1
+        elif c == '}':
+            depth -= 1
+            if depth == 0:
+                return text[open_pos + 1:i], i + 1
+        i += 1
+    return None
+
+
 # Pattern for \includegraphics (or other graphic body).
 # The optional `[key=value]` option block (e.g. `[width=0.9\textwidth]`)
 # may appear between the command name and the `{filename}`.
@@ -1548,12 +1581,15 @@ def _c9_parse_figure_block(figure_text: str) -> dict:
         'graphic_pos': -1,
         'label': '',
     }
-    # Find caption
-    cap_match = _C9_CAPTION_RE.search(figure_text)
-    if cap_match:
-        result['has_caption'] = True
-        result['caption_text'] = cap_match.group(1)
-        result['caption_pos'] = cap_match.start()
+    # Find caption (balanced-brace scan; see _c9_balanced_content).
+    cap_at = figure_text.find('\\caption')
+    if cap_at >= 0:
+        brace_at = figure_text.find('{', cap_at)
+        got = _c9_balanced_content(figure_text, brace_at) if brace_at >= 0 else None
+        if got is not None:
+            result['has_caption'] = True
+            result['caption_text'] = got[0]
+            result['caption_pos'] = cap_at
     # Find graphic
     graph_match = _C9_GRAPHIC_RE.search(figure_text)
     if graph_match:
@@ -1672,16 +1708,80 @@ def check_c9_figure_caption(
 
 
 # ---------------------------------------------------------------------------
+# Input resolution
+# ---------------------------------------------------------------------------
+#
+# The template is forked into a paper directory and run there, so it must
+# find the manuscript itself. `MAIN` / `REFS` name the conventional layout
+# (main.tex + refs.bib); when a paper uses another name, or ships only a
+# compiled .bbl, the resolvers below locate what is actually present.
+
+def _resolve_main(default: Path) -> Path | None:
+    """Locate the manuscript's root .tex.
+
+    Prefers `default` (main.tex). Otherwise picks the single .tex that
+    declares ``\\begin{document}`` -- the file that pulls the rest in.
+    Returns None when that choice is ambiguous or nothing is found, so
+    the caller can report an operational error rather than guess.
+    """
+    if default.exists():
+        return default
+    root = default.parent
+    candidates = [p for p in sorted(root.glob('*.tex')) if p.is_file()]
+    roots: list[Path] = []
+    for p in candidates:
+        try:
+            if '\\begin{document}' in p.read_text(
+                    encoding='utf-8', errors='replace'):
+                roots.append(p)
+        except OSError:
+            continue
+    if len(roots) == 1:
+        return roots[0]
+    if not roots and len(candidates) == 1:
+        return candidates[0]
+    return None
+
+
+# Categories that ran without crashing but had nothing to look at. Kept
+# separate from `errors` (a crashed check) and from findings (a violation):
+# a document with no \begin{abstract} says nothing about its other nine
+# categories, so C1 must not be silently reported as a pass, and must not
+# take the whole audit down with it either. Reported as [not observed] and
+# reflected in the exit code (3).
+OBSERVATION_FAILURES: dict[str, str] = {}
+
+
+def _resolve_bib(default: Path) -> Path | None:
+    """Locate a bibliography source for the cite-key check.
+
+    Prefers refs.bib (the authored source); otherwise the .bbl matching
+    the manuscript, then any .bbl in the directory. Returns None when
+    neither a .bib nor a .bbl is present -- C4 is then reported as not
+    applicable instead of aborting the whole audit.
+    """
+    if default.exists():
+        return default
+    root = default.parent
+    bbls = sorted(p for p in root.glob('*.bbl') if p.is_file())
+    return bbls[0] if bbls else None
+
+
+# ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
 
 def main() -> int:
-    if not MAIN.exists() or not REFS.exists():
-        print(f'ERROR: missing {MAIN} or {REFS}', file=sys.stderr)
+    main_tex = _resolve_main(MAIN)
+    if main_tex is None:
+        print(f'ERROR: no manuscript .tex found in {MAIN.parent} '
+              f'(looked for main.tex and a sole .tex with \\begin{{document}})',
+              file=sys.stderr)
         return 2
 
-    tex = read(MAIN)
-    bib = read(REFS)
+    bib_path = _resolve_bib(REFS)
+    tex = read(main_tex)
+    bib = read(bib_path) if bib_path is not None else None
 
     # v0.5.1: every category runs through run_check, which records one of
     # three states:
@@ -1705,23 +1805,35 @@ def main() -> int:
         'C6': ('c6_blacklist',),
     }
 
-    def run_check(cat: str, fn, *args):
+    def run_check(cat: str, fn, *args, applicable: bool = True,
+                  reason: str = 'no per-paper config'):
+        if not applicable:
+            run_status[cat] = f'not applicable: {reason}'
+            return []
         required = _REQUIRED_KEYS.get(cat, ())
         if any(not CHECKS_CONFIG.get(k) for k in required):
-            run_status[cat] = 'not applicable'
+            run_status[cat] = f'not applicable: {reason}'
             return []
         run_status[cat] = 'checked'
         try:
             return fn(*args)
         except Exception as exc:
             errors.append((cat, f'{type(exc).__name__}: {exc}'))
+            run_status[cat] = 'error'
             return []
 
     all_findings: list[tuple[str, str, int]] = []
     all_findings += run_check('C1', check_c1_abstract_definitions, tex)
     all_findings += run_check('C2', check_c2_bonferroni_consistency, tex)
     all_findings += run_check('C3', check_c3_formalization, tex)
-    all_findings += run_check('C4', check_c4_citation_hygiene, tex, bib)
+    # C4 runs only when a bibliography source was found; without a .bib or
+    # .bbl there are no keys to compare against, so it is reported as not
+    # applicable rather than crashing the audit (the old template exited 2
+    # on a missing refs.bib).
+    all_findings += run_check(
+        'C4', check_c4_citation_hygiene, tex, bib,
+        applicable=(bib is not None),
+        reason='no .bib or .bbl found to verify cite keys against')
     all_findings += run_check('C5', check_c5_sample_size_and_test, tex)
     all_findings += run_check('C6', check_c6_blacklist, tex)
     # C7: read the per-paper threshold from CHECKS_CONFIG.
@@ -1747,18 +1859,20 @@ def main() -> int:
     print('=' * 72)
     print(f'PAPER AUDIT  ({Path(__file__).name})')
     print('=' * 72)
-    print(f'Source: {MAIN}')
+    print(f'Source: {main_tex}')
     print(f'Size:   {len(tex):,} chars')
-    bib_key_count = len(_bib_keys(bib))
-    print(f'Refs:   {bib_key_count} entries in {REFS.name}')
+    if bib is None:
+        print('Refs:   none found (no .bib or .bbl)')
+    else:
+        print(f'Refs:   {len(_bib_keys(bib))} entries in {bib_path.name}')
     print()
     print('Findings by category:')
     for cat in ('C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10'):
         sev = SEVERITY[cat]
         n = summary[cat]
         marker = '[OK]' if n == 0 else f'[{sev}]'
-        note = ('  [not applicable: no per-paper config]'
-                if run_status.get(cat) == 'not applicable' else '')
+        st = run_status.get(cat, '')
+        note = f'  [{st}]' if st.startswith('not applicable') else ''
         if cat in OBSERVATION_FAILURES and not note:
             note = '  [not observed: %s]' % OBSERVATION_FAILURES[cat]
         print(f'  {cat}  {marker:7s}  {n} finding(s){note}')
@@ -1798,10 +1912,10 @@ def main() -> int:
         return 2
 
     if OBSERVATION_FAILURES:
-        # Exit 3: every check that could run, ran and did not crash, but
-        # at least one category had nothing to look at. Kept distinct from
-        # 0/1 so a pipeline cannot read "unobserved" as "clean", and from
-        # 2 so a caller can tell a blind spot from a broken tool.
+        # Exit 3: every check that could run, ran and did not crash, but at
+        # least one category had nothing to look at. Kept distinct from 0/1
+        # so a pipeline cannot read "unobserved" as "clean", and from 2 so a
+        # caller can tell a blind spot from a broken tool.
         print('%d categor(y/ies) could not be observed: %s — exit code 3.'
               % (len(OBSERVATION_FAILURES),
                  ', '.join(sorted(OBSERVATION_FAILURES))))

@@ -1,0 +1,21 @@
+# arXiv:2502.14074 — inputs read by audit_paper.py, SHA-256 verified.
+#
+# The audit aborts (exit 2) if a listed file is missing or its hash
+# differs. Fetch and extract with:
+#
+#   curl -L -o src.tar.gz https://arxiv.org/e-print/2502.14074
+#   mkdir -p _paper && tar -xzf src.tar.gz -C _paper
+#
+# Lines below are "<sha256>  <name>"; names without a path are read
+# relative to --paper-dir (_paper by default).
+#
+d289584a23be41cdf129ee2899ee1a2777a0492bc0759aa01d0c0581b98a3e87  paper.tex
+e390cadd2074530fb2bdd2bccc5fcb773795d0c7d401652c22d5941df65defa5  paper.bbl
+7e2da20baa491f918a21545296d86a2840c526c0dfa43933b1bd0f0b812181af  paper.sty
+0ec3d5eb9b02efb7e0b44a32f3775882f42a743d0bdc618f34e6936309b98764  paper.bst
+e0af71588146f08720f378e5f8b5d105deb43948087ab4a276074e6624e68f03  00README.json
+#
+# The e-print archive itself. Verified only when --archive is passed;
+# the extracted files above are the authoritative inputs to the audit.
+#
+5bf88239635fe93358b3ea13947dd7187d81859a08898262ee483c560abd2e77  src.tar.gz

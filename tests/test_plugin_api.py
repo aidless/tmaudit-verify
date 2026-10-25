@@ -466,6 +466,91 @@ def test_paper_configs_can_carry_c11_plugins_disabled():
 
 
 # =====================================================================
+# TestPluginRunCLI: `plugins run` on an arbitrary paper directory
+# =====================================================================
+
+
+def test_plugins_run_accepts_an_arbitrary_paper_dir(tmp_path, capsys):
+    """A plugin author outside this project must be able to audit their
+    own paper.
+
+    `plugins run --paper-dir DIR` is the supported path for a
+    manuscript the built-in C1..C10 rulepack was not written for: the
+    plugin receives that directory's main.tex and an empty config.
+    Before this existed, the subcommand required `--paper N` in 1..5,
+    so a plugin author could write checks but never point them at
+    their own paper.
+    """
+    import tmaudit.plugins as _plugins
+    from tmaudit.cli import main
+
+    @_plugins.check(
+        name="synthetic-arbitrary-dir",
+        severity="HIGH",
+        help_text="emits one finding regardless of config",
+    )
+    def _synthetic(tex, config=None):
+        assert config == {}, (
+            f"an arbitrary --paper-dir run must yield an empty config, "
+            f"got {config!r}"
+        )
+        return [Finding(category="SYN", severity="HIGH",
+                        message="synthetic finding", line=1)]
+
+    paper_dir = tmp_path / "my-paper"
+    paper_dir.mkdir()
+    (paper_dir / "main.tex").write_text("hello world\n", encoding="utf-8")
+
+    real_load = _plugins.load_plugins
+    try:
+        _plugins.load_plugins = lambda force_reload=False: {
+            "synthetic-arbitrary-dir": _synthetic,
+        }
+        rc = main(["plugins", "run", "synthetic-arbitrary-dir",
+                   "--paper-dir", str(paper_dir)])
+    finally:
+        _plugins.load_plugins = real_load
+        reset_loader_cache()
+
+    assert rc == 0, "--paper-dir on an arbitrary paper must not be rejected"
+    out = capsys.readouterr().out
+    assert "[HIGH]" in out
+    assert "synthetic finding" in out
+
+
+def test_plugins_run_without_paper_dir_points_at_the_arbitrary_route(
+    tmp_path, capsys
+):
+    """An unknown --paper must still fail, and say how to audit a paper
+    that has no built-in config."""
+    import tmaudit.plugins as _plugins
+    from tmaudit.cli import main
+
+    @_plugins.check(name="synthetic-unknown-paper", severity="LOW",
+                    help_text="never runs in this test")
+    def _synthetic(tex, config=None):
+        return []
+
+    real_load = _plugins.load_plugins
+    try:
+        _plugins.load_plugins = lambda force_reload=False: {
+            "synthetic-unknown-paper": _synthetic,
+        }
+        rc = main(["plugins", "run", "synthetic-unknown-paper", "--paper", "999"])
+    finally:
+        _plugins.load_plugins = real_load
+        reset_loader_cache()
+
+    assert rc == 1, "an unknown built-in paper must not silently succeed"
+    err = capsys.readouterr().err
+    assert "--paper-dir" in err, (
+        "the error must name the arbitrary-paper route, else a plugin "
+        f"author is left without a path forward; got: {err!r}"
+    )
+
+
+
+# =====================================================================
 # TestReExports: the public surface is correct
 # =====================================================================
 

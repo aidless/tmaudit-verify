@@ -491,5 +491,65 @@ def test_c9_caption_case_insensitive_keyword():
     )
 
 
+# =====================================================================
+# Nested-brace captions (found by auditing arXiv:2502.14074)
+# =====================================================================
+# A real caption often nests braces, e.g.
+#   \caption{\textbf{Rankings ... \textsc{Swim} ...}}
+#   \caption{\textcolor[HTML]{2f70b8}{{Llama-3-70B}} are used as baselines.}
+# The old brace-bounded regex accepted only one brace level, so a figure
+# that DID carry a caption was reported as having none.
+
+TEX_FIGURE_NESTED_CAPTION = r"""
+\begin{document}
+Figure~\ref{fig:nested} is described in the text.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.9\textwidth]{nested.png}
+  \caption{\textbf{Rankings from baseline-fixed frameworks show high
+  sensitivity.} \textsc{Swim} is compared against a baseline.}
+  \label{fig:nested}
+\end{figure}
+\end{document}
+"""
+
+
+def test_c9_nested_brace_caption_is_recognised():
+    """A caption with two brace levels (\\textbf{... \\textsc{...} ...})
+    must count as present, so no HIGH missing-caption finding fires."""
+    findings = _fresh_check(TEX_FIGURE_NESTED_CAPTION)
+    high = [f for f in findings if f[0] == 'C9' and 'HIGH' in f[1]]
+    assert high == [], f'unexpected HIGH (missing caption): {findings}'
+
+
+def test_c9_double_brace_caption_is_recognised():
+    """The `{{...}}` form (e.g. inside \\textcolor) is also handled."""
+    tex = (
+        '\\begin{figure}[t]\n'
+        '\\includegraphics{fig.png}\n'
+        '\\caption{\\textcolor[HTML]{2f70b8}{{Llama-3-70B}} is a baseline.}\n'
+        '\\label{fig:x}\n'
+        '\\end{figure}\n'
+    )
+    findings = _fresh_check(tex)
+    high = [f for f in findings if f[0] == 'C9' and 'HIGH' in f[1]]
+    assert high == [], high
+
+
+def test_c9_unbalanced_caption_brace_is_not_a_caption():
+    """A truly unclosed caption group must still be treated as missing,
+    so the scan does not swallow the rest of the figure block."""
+    tex = (
+        '\\begin{figure}[t]\n'
+        '\\includegraphics{fig.png}\n'
+        '\\caption{broken caption\n'
+        '\\end{figure}\n'
+    )
+    findings = _fresh_check(tex)
+    high = [f for f in findings if f[0] == 'C9' and 'HIGH' in f[1]]
+    assert len(high) == 1, high
+
+
 if __name__ == '__main__':
     sys.exit(pytest.main([__file__, '-v']))

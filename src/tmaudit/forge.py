@@ -56,6 +56,41 @@ def _read_template(name: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Input resolution
+# ---------------------------------------------------------------------------
+
+def find_main_tex(paper_dir: Path, default_name: str = 'main.tex') -> Path | None:
+    """Locate a paper directory's root .tex.
+
+    Prefers ``main.tex``; otherwise the sole .tex that declares
+    ``\\begin{document}`` -- the file that pulls the rest in. Returns
+    None when that choice is ambiguous or there is no .tex at all, so the
+    caller reports an operational error rather than guessing.
+
+    Used by ``plugins run --paper-dir`` and the generic verify fork, both
+    of which audit a directory the built-in rulepack was not written for
+    and which therefore cannot assume the conventional ``main.tex``.
+    """
+    paper_dir = Path(paper_dir)
+    default = paper_dir / default_name
+    if default.exists():
+        return default
+    candidates = [p for p in sorted(paper_dir.glob('*.tex')) if p.is_file()]
+    roots: list[Path] = []
+    for p in candidates:
+        try:
+            if '\\begin{document}' in p.read_text(
+                    encoding='utf-8', errors='replace'):
+                roots.append(p)
+        except OSError:
+            continue
+    if len(roots) == 1:
+        return roots[0]
+    if not roots and len(candidates) == 1:
+        return candidates[0]
+    return None
+
+# ---------------------------------------------------------------------------
 # Substitutions for the verify template
 # ---------------------------------------------------------------------------
 
@@ -319,6 +354,31 @@ def fork_verify(paper_number: int, paper_dir: Path | None = None) -> Path:
     target = paper_dir / f'verify_p{paper_number}.py'
     template = _read_template('verify_TEMPLATE.py')
     out = _substitute_verify(template, cfg)
+    _write_target(target, out)
+    target.write_text(out, encoding='utf-8')
+    return target
+
+
+def fork_verify_generic(paper_dir: Path) -> Path:
+    """Fork a neutral verify script into ``paper_dir``.
+
+    For auditing a manuscript the built-in rulepack was not written for.
+    The script keeps the shipped factory ``CHECKS_CONFIG`` (empty), so
+    the per-paper categories (C1/C2/C3/C6) report "not applicable" and
+    the generic categories (C4/C5/C7/C8/C9/C10 sub-checks) run with their
+    built-in defaults. Written as ``verify_generic.py``; reached through
+    ``tmaudit verify --paper-dir DIR`` (no ``--paper``).
+    """
+    # Absolute: the generated script is later launched with cwd=target.parent,
+    # so a relative paper_dir would be resolved twice and the launch would look
+    # for examples/sample-paper/examples/sample-paper/verify_generic.py.
+    paper_dir = Path(paper_dir).expanduser().resolve()
+    template = _read_template('verify_TEMPLATE.py')
+    out = template.replace(
+        "ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')",
+        f"ROOT = Path({paper_dir.as_posix()!r})",
+    )
+    target = paper_dir / 'verify_generic.py'
     _write_target(target, out)
     target.write_text(out, encoding='utf-8')
     return target

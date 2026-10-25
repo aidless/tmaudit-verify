@@ -27,6 +27,21 @@ BUILD = ROOT / 'build_pyz'
 OUT = ROOT / 'tmaudit.pyz'
 
 
+def _exclude_byproducts(_dir: str, names: list) -> list:
+    """Skip interpreter and packaging byproducts.
+
+    ``__pycache__`` appears in any tree where the tests have been run,
+    so building the archive after a test run used to ship 18 stale
+    ``.pyc`` files and inflate the zipapp roughly threefold
+    (53 KB -> 161 KB). Bytecode does not belong in a source zipapp: it
+    goes stale the moment a source file changes.
+    """
+    return [n for n in names
+            if n == '__pycache__'
+            or n.endswith('.pyc')
+            or n.endswith('.egg-info')]
+
+
 def main() -> int:
     if not PKG.exists():
         print(f'ERROR: {PKG} does not exist; run `pip install --editable .` first',
@@ -39,18 +54,8 @@ def main() -> int:
     BUILD.mkdir()
 
     # Copy tmaudit package tree (preserve structure)
-    #
-    # `__pycache__` must not go in. It never used to matter because the
-    # archive was built on a clean tree, but any run of the test suite or an
-    # editable install leaves bytecode in src/, and copytree copies it
-    # verbatim: the archive grows, carries .pyc compiled against whatever
-    # interpreter built it, and CI's freshness gate (_check_pyz_fresh.py)
-    # rejects it outright.
     target_pkg = BUILD / 'tmaudit'
-    shutil.copytree(
-        PKG, target_pkg,
-        ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '*.pyo'),
-    )
+    shutil.copytree(PKG, target_pkg, ignore=_exclude_byproducts)
 
     # Build the .pyz
     if OUT.exists():

@@ -16,7 +16,10 @@ and exposes a single CLI:
 
     tmaudit --list
     tmaudit verify --paper N [--paper-dir PATH]
-    tmaudit verify --target paper.toml [--paper-dir PATH]
+    tmaudit verify --paper N
+    tmaudit verify --paper-dir PATH        # generic checks, empty config
+    tmaudit verify --target paper.toml     # external config, rules included
+    tmaudit admission --gain 7.3 --tasks 89
     tmaudit compile --paper N
     tmaudit fix-unicode --paper N
     tmaudit audit-all
@@ -26,7 +29,10 @@ The package can be installed with `pip install tmaudit/` (or
 `pip install -e .` for editable mode) and shipped as a single
 executable .pyz file with `python -m zipapp`.
 """
-__version__ = '0.7.0'
+# Keep in lockstep with pyproject.toml — the published 0.5.1 wheel
+# previously reported 0.5.0 from this constant, and the cache key is
+# derived from it (cache.cache_key).
+__version__ = '0.6.0'
 
 # Re-export the plugin API at the package level so users can
 # `from tmaudit import Finding, check` instead of

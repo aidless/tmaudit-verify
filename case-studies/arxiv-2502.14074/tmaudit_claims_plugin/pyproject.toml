@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tmaudit-claims-plugin"
+version = "0.1.0"
+description = "Reporting-standards checks for quantitative claims (tmaudit plugin)"
+authors = [{name = "tmaudit contributors"}]
+requires-python = ">=3.9"
+dependencies = []  # tmaudit is a sibling project; require at runtime, not at install.
+
+[project.entry-points."tmaudit.plugins"]
+claims-significance-no-test = "tmaudit_claims_plugin.checks:significance_without_test"
+claims-percent-table-no-uncertainty = "tmaudit_claims_plugin.checks:percent_table_without_uncertainty"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tmaudit_claims_plugin*"]

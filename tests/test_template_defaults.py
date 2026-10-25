@@ -326,7 +326,7 @@ def test_bib_key_on_its_own_line_is_found():
     refs.bib, so citing it must NOT be reported as missing."""
     tex = 'See \\cite{keyA} for details.'
     findings = verify_TEMPLATE.check_c4_citation_hygiene(tex, BIB_MULTILINE_KEY)
-    missing = [f for f in findings if 'missing from refs.bib' in f[1]]
+    missing = [f for f in findings if 'missing from the bibliography' in f[1]]
     assert missing == [], findings
 
 
@@ -334,7 +334,7 @@ def test_bib_key_with_surrounding_whitespace_is_found():
     tex = 'See \\cite{keyA} for details.'
     bib = '@article{  keyA ,\n  author = {A},\n}\n'
     findings = verify_TEMPLATE.check_c4_citation_hygiene(tex, bib)
-    missing = [f for f in findings if 'missing from refs.bib' in f[1]]
+    missing = [f for f in findings if 'missing from the bibliography' in f[1]]
     assert missing == [], findings
 
 
@@ -342,7 +342,7 @@ def test_bib_key_inline_still_found():
     tex = 'See \\cite{keyA} for details.'
     bib = '@article{keyA,\n  author = {A},\n}\n'
     findings = verify_TEMPLATE.check_c4_citation_hygiene(tex, bib)
-    missing = [f for f in findings if 'missing from refs.bib' in f[1]]
+    missing = [f for f in findings if 'missing from the bibliography' in f[1]]
     assert missing == [], findings
 
 
@@ -352,7 +352,7 @@ def test_truly_missing_key_still_reported():
     tex = 'See \\cite{ghost2024} for details.'
     findings = verify_TEMPLATE.check_c4_citation_hygiene(
         tex, BIB_MULTILINE_KEY)
-    assert any('missing from refs.bib' in f[1] for f in findings), findings
+    assert any('missing from the bibliography' in f[1] for f in findings), findings
 
 
 def test_self_cite_subcheck_silent_without_prefix():
