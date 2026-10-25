@@ -19,6 +19,29 @@ PyPI 现有版本只有 `0.5.0`、`0.5.1`（实测确认），`0.6.0` 未被占�
 
 两个站是独立账号，token 不通用。首次上传时项目尚不存在，Scope 只能选 **Entire account**；等 `tmaudit` 0.6.0 上传成功后，建议改建限定到 `tmaudit` 项目的 token（作用域更小，泄漏损失有限）。
 
+### 生成表单怎么填
+
+| 字段 | 填什么 |
+|---|---|
+| **Token name** | 自拟，仅是标签，用于日后辨认和吊销。如 `tmaudit-upload-linux` |
+| **Scope** | 首次必须选 **Entire account (all projects)** — `tmaudit` 项目还不存在，选不到它 |
+
+点 Create 后，页面只展示 token **一次**，形如 `pypi-AgEIcHlwaS5vcmc...`（很长）。关掉页面就只能重新生成，所以先复制走。
+
+### twine 的两个提示分别填什么
+
+```text
+Username: __token__          ← 固定字符串，不是你的 PyPI 用户名
+Password: pypi-AgEIcHlwa... ← 粘贴刚才那串 token
+```
+
+常见的两个误解：
+
+- **用户名不是你的 PyPI 账号名。** 填 `aidless` 会得到 `403 Invalid or non-existent authentication information`。必须是 `__token__`（两下划线 + token + 两下划线）。
+- **粘贴时屏幕不回显，一个字都不显示。** 这是正常的，不是没粘上。粘完直接回车；如果手势不确定，回车后报 403 才说明没粘进去。
+
+**不要把这串 token 发到任何对话里**，包括发给我。它等同于账号上传权限。若已泄漏，去上面同一个页面 Revoke 掉再生成新的。
+
 ---
 
 ## 1. 上传到 TestPyPI
