@@ -2,7 +2,7 @@
 
 本文档给你直接复制粘贴的命令。token 由你自己输入，不进对话记录。
 
-**当前状态**：`dist/tmaudit-0.6.0-py3-none-any.whl` 与 `.tar.gz` 已构建，`twine check --strict` 双包 PASSED，工作区 422 passed / 3 skipped。**尚未上传任何索引。**
+**当前状态**：`dist/tmaudit-0.6.0-py3-none-any.whl`（103,033 B）与 `.tar.gz`（173,045 B）已构建，`twine check --strict` 双包 PASSED，工作区 429 passed / 3 skipped，wheel/sdist 内全部源文件与 `src/` 字节一致。**尚未上传任何索引。**
 
 PyPI 现有版本只有 `0.5.0`、`0.5.1`（实测确认），`0.6.0` 未被占用。
 
@@ -72,7 +72,7 @@ rm -rf /tmp/tp-verify
 
 **必须确认是从 test.pypi.org 下载的**，输出里应出现 `test-files.pythonhosted.org`。若显示 `files.pythonhosted.org`（无 `test-` 前缀），说明装到了正式 PyPI 的旧版，**不是**你要验的东西。
 
-### 四项验证
+### 五项验证
 
 ```bash
 # 1. 版本
@@ -92,14 +92,20 @@ print('yaml:', sorted(x.name for x in (p/'detector_config').glob('*.yaml')))
 # 期望: [NOT CERTIFIED] gain=+7.30pp  upper=+32.10pp  m=89  K=5  T=10  delta=0.05  eta=0.00pp
 #       note: certifying this gain would need tasks m >= 2,593
 
-# 4. 外部论文端到端（0.6.0 的核心能力）
+# 4. list 对缺失路径的处理（v0.6.0 新增）
+/tmp/tp-verify/bin/tmaudit list
+# 期望: 5 行都带 (missing)，末尾有 "5 of 5 rulepack path(s) do not exist"
+#       以及 TMAUDIT_RESEARCH_DIR 和 --paper-dir 两条提示
+# 若显示 (missing) 但无末尾说明，说明装到了旧包
+
+# 5. 外部论文端到端（0.6.0 的核心能力）
 mkdir -p /tmp/tp-ext
 printf '\\documentclass{article}\n\\begin{document}\n\\section{Intro}\nCode at \\url{https://github.com/x/y}.\n\\end{document}\n' > /tmp/tp-ext/paper.tex
 /tmp/tp-verify/bin/tmaudit verify --paper-dir /tmp/tp-ext
 # 期望: Source 指向 paper.tex（不是 main.tex），TOTAL 行给出 findings，rc=0
 ```
 
-第 4 项特意用 `paper.tex` 而非 `main.tex`，验证运行时自动探测根文件——这是合并进来的远端能力。
+第 5 项特意用 `paper.tex` 而非 `main.tex`，验证运行时自动探测根文件——这是合并进来的远端能力。
 
 ---
 
