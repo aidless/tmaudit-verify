@@ -11,7 +11,7 @@ key, no network, and no required dependencies.
 [![CI](https://github.com/aidless/tmaudit/actions/workflows/ci.yml/badge.svg)](https://github.com/aidless/tmaudit/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/tmaudit)](https://pypi.org/project/tmaudit/)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
-![Tests](https://img.shields.io/badge/tests-391%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-429%20passing-brightgreen)
 ![Meta--tests](https://img.shields.io/badge/meta--tests-14%2F14%20caught-success)
 ![Categories](https://img.shields.io/badge/audit%20categories-C1..C10-blue)
 ![PR%20Checks](https://img.shields.io/badge/PR%20checks-44%20checkboxes-blueviolet)
@@ -48,8 +48,10 @@ Findings by category:
 
 ### (0) Audit a paper you do not own (`--target`, v0.6.0)
 
-`--paper N` only works on this author's five directories. To audit any
-other paper, drop a config next to it and use the same command:
+`--paper N` only works on this author's five directories. `tmaudit list`
+marks them `(missing)` when they are not present on your machine — that is
+expected, not a broken install. To audit any other paper, drop a config next
+to it and use the same command:
 
 ```toml
 # paper.toml, next to main.tex

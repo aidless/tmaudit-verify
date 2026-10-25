@@ -75,13 +75,48 @@ def _add_paper_arg(parser: argparse.ArgumentParser) -> None:
 
 
 def cmd_list(args: argparse.Namespace) -> int:
+    """List the built-in per-paper rulepacks and, importantly, say so when
+    the directories they point at do not exist on this machine.
+
+    The five built-in configurations describe the author's own manuscripts, so
+    their paths are Windows paths from the machine they were written on. On any
+    other machine they resolve to nothing. Printing them bare made a fresh
+    install look broken; the fix is not to hide them but to label them and
+    name the environment variable that repoints them.
+    """
     print('Known paper configurations:')
     print(f'  {"Paper":<6}  {"verify":<7}  {"compile":<8}  path')
+    missing = []
     for n in sorted(VERIFY_CONFIGS):
         verify_ok = 'OK'
         compile_ok = 'OK' if n in COMPILE_CONFIGS else '—'
         path = VERIFY_CONFIGS[n]['dir']
-        print(f'  {n:<6}  {verify_ok:<7}  {compile_ok:<8}  {path}')
+        # A path that does not exist here is not an error: it is a rulepack
+        # written for a paper this machine does not have.
+        here = Path(path).is_dir()
+        mark = '' if here else '  (missing)'
+        if not here:
+            missing.append(n)
+        print(f'  {n:<6}  {verify_ok:<7}  {compile_ok:<8}  {path}{mark}')
+    if missing:
+        total = len(VERIFY_CONFIGS)
+        print()
+        print(f'{len(missing)} of {total} rulepack path(s) do not exist on this '
+              'machine.')
+        if len(missing) == total:
+            # Nothing resolved: almost certainly a fresh install on a machine
+            # that never had the author's research tree.
+            print('These are the author\'s own manuscripts, not a download you '
+                  'skipped.')
+            print('To point them elsewhere:  export TMAUDIT_RESEARCH_DIR=/path/'
+                  'to/research')
+            print('To audit a paper of your own instead:  '
+                  'tmaudit verify --paper-dir DIR')
+        else:
+            # Some resolved, so the variable is already in play — do not
+            # repeat the setup advice, just name what is still absent.
+            print('Remaining paths under the current research root did not '
+                  'resolve.')
     return 0
 
 

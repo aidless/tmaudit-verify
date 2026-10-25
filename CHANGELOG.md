@@ -85,6 +85,32 @@ a round-trip property test (`required_tasks` then `certify` must pass, and
 This defect was found and fixed independently on the other development
 branch as release 0.5.2; see `DIVERGENCE_ANALYSIS.md`.
 
+### Fixed (first-run output)
+
+- **`tmaudit list` showed five dead paths on any machine that is not the
+  author's, and said nothing about it.** The five built-in rulepacks describe
+  the author's own manuscripts, so their `dir` values are Windows paths. On a
+  fresh `pip install` elsewhere, the listing printed all five verbatim: a new
+  user sees `F:/Research/PAPER1_CONSOLIDATED` through `PAPER5`, all absent,
+  with no indication that this is expected or how to repoint them. The
+  override has existed all along (`TMAUDIT_RESEARCH_DIR`), and `--paper-dir`
+  covers the case of auditing an unrelated paper, but neither was mentioned
+  at the one place a confused user looks.
+
+  Missing paths are now marked `(missing)` and a closing note names both
+  escapes. The rows are deliberately **not** hidden — the rulepacks really
+  are bundled, and the listing is the only place a user can learn a rulepack
+  for paper N exists. When nothing resolves the note explains that these are
+  the author's manuscripts rather than a skipped download; when only some
+  resolve it drops that claim and the export hint, since both would then be
+  false or redundant. The mark is computed against the live filesystem per
+  run, so it disappears as soon as a path points somewhere real.
+
+  Tests: `tests/test_cli_list.py` (7 cases). This subcommand had **zero**
+  coverage before, which is why the rough edge survived: one test derives the
+  expected mark count from the filesystem instead of hardcoding it, so the
+  original defect fails the suite on any non-Windows machine.
+
 ## [v0.5.3] — 2026-10-24
 
 ### Added — `verify --target FILE`: audit a paper you do not own
