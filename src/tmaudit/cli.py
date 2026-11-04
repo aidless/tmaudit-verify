@@ -50,6 +50,8 @@ from .configs.paper_configs import PAPER_CONFIGS as VERIFY_CONFIGS
 from . import forge
 from . import cache as _cache
 from . import admission as _admission
+from . import artifacts as _artifacts
+from . import witness as _witness
 
 
 def _add_paper_arg(parser: argparse.ArgumentParser) -> None:
@@ -711,8 +713,122 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_adm.set_defaults(func=_admission.cmd_admission)
 
+    # Artifact-side verification for agent tool calls (added in v0.8.0).
+    # See tmaudit/artifacts.py for the three-verdict rationale: exit code 0 is
+    # a process signal, not evidence that a side effect occurred.
+    p_art = sub.add_parser(
+        'artifacts',
+        help='verify produced files against a spec; three verdicts '
+             '(pass / fail / unverifiable) so "could not check" never reads '
+             'as "checked and fine"',
+    )
+    p_art.add_argument(
+        'paths', nargs='*', metavar='FILE',
+        help='artifact path(s) to check; combine with --format/--min-bytes '
+             'for a one-off check',
+    )
+    p_art.add_argument(
+        '--spec', type=Path, default=None, metavar='FILE',
+        help='JSON spec: a list of {path, format, min_bytes, min_mtime, '
+             'zip_members, must_contain, must_not_contain, text_regex, '
+             'min_pages_pdf, png_dimensions, label} objects, or '
+             '{"format": "tmaudit-artifact-spec/1", "artifacts": [...]}',
+    )
+    p_art.add_argument(
+        '--format', default=None, metavar='FMT',
+        help='declared container format for positional paths '
+             '(pdf/zip/png/mp4/...); overrides extension inference',
+    )
+    p_art.add_argument(
+        '--min-bytes', type=int, default=0, metavar='N',
+        help='reject artifacts smaller than N bytes (default: 0, off)',
+    )
+    p_art.add_argument(
+        '--min-mtime', type=float, default=None, metavar='EPOCH',
+        help='reject artifacts older than this epoch timestamp — the '
+             'stale-artifact guard; pass the time the producing command began',
+    )
+    p_art.add_argument(
+        '--min-pages-pdf', type=int, default=None, metavar='N',
+        help='reject PDFs with fewer than N page objects',
+    )
+    p_art.add_argument(
+        '--python-syntax', action='store_true',
+        help='also parse each artifact as Python (use for generated scripts; '
+             'declare --format text or pass a .py path)',
+    )
+    p_art.add_argument(
+        '--hash', action='store_true',
+        help='compute SHA-256 for each artifact (slower, enables run-to-run '
+             'diffing)',
+    )
+    p_art.add_argument(
+        '--json', action='store_true',
+        help='also print the full result set as JSON',
+    )
+    p_art.set_defaults(func=_artifacts.cmd_artifacts)
+
+    # Temporal regression ledger (added in v0.9.0). Ported from ruflo's
+    # witness toolkit (ADR-103), verified there end-to-end before porting.
+    # Unsigned by design: a signature keyed off the public commit would
+    # advertise authorship it cannot prove.
+    p_wit = sub.add_parser(
+        'witness',
+        help='temporal regression ledger: record load-bearing fix markers '
+             'and locate the commit that regressed one',
+    )
+    p_wit_sub = p_wit.add_subparsers(dest='witness_action', required=True)
+
+    p_wit_regen = p_wit_sub.add_parser(
+        'regen', help='refresh every fix and append a JSONL snapshot')
+    p_wit_regen.add_argument('--root', default='.', help='repository root')
+    p_wit_regen.add_argument('--manifest', required=True, type=Path,
+                             help='where to write the manifest JSON')
+    p_wit_regen.add_argument('--history', default=None, type=Path,
+                             help='JSONL history file to append to')
+    p_wit_regen.add_argument('--fixes', default=None, type=Path,
+                             help='JSON file: {"fixes": [{id, file, marker, desc}]}')
+
+    p_wit_verify = p_wit_sub.add_parser(
+        'verify', help='check a manifest against the live tree')
+    p_wit_verify.add_argument('--manifest', required=True, type=Path)
+    p_wit_verify.add_argument('--root', default=None,
+                              help='defaults to the manifest\'s recorded root')
+
+    p_wit_hist = p_wit_sub.add_parser(
+        'history', help='locate a regression, or list snapshots')
+    p_wit_hist.add_argument('--history', required=True, type=Path)
+    p_wit_hist.add_argument('--id', dest='fix_id', default=None,
+                            help='fix id; with it, report last pass -> first fail')
+
+    p_wit.set_defaults(func=_cmd_witness)
+
     args = parser.parse_args(argv)
     return args.func(args)
+
+
+def _cmd_witness(args: argparse.Namespace) -> int:
+    """Dispatch `tmaudit witness` to tmaudit.witness.cli with the parsed paths."""
+    argv: list[str] = []
+    if args.witness_action == 'regen':
+        argv += ['regen', '--root', str(args.root),
+                 '--manifest', str(args.manifest)]
+        if args.history:
+            argv += ['--history', str(args.history)]
+        if args.fixes:
+            argv += ['--fixes', str(args.fixes)]
+    elif args.witness_action == 'verify':
+        argv += ['verify', '--manifest', str(args.manifest)]
+        if args.root:
+            argv += ['--root', str(args.root)]
+    elif args.witness_action == 'history':
+        argv += ['history', '--history', str(args.history)]
+        if args.fix_id:
+            argv += ['--id', args.fix_id]
+    else:  # pragma: no cover - argparse enforces the choice
+        print(f'witness: unknown action {args.witness_action!r}', file=sys.stderr)
+        return 2
+    return _witness.cli(argv)
 
 
 if __name__ == '__main__':

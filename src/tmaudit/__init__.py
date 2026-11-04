@@ -20,6 +20,8 @@ and exposes a single CLI:
     tmaudit verify --paper-dir PATH        # generic checks, empty config
     tmaudit verify --target paper.toml     # external config, rules included
     tmaudit admission --gain 7.3 --tasks 89
+    tmaudit artifacts --spec artifacts.json
+    tmaudit artifacts out.pdf --format pdf --min-bytes 1000
     tmaudit compile --paper N
     tmaudit fix-unicode --paper N
     tmaudit audit-all
@@ -32,7 +34,7 @@ executable .pyz file with `python -m zipapp`.
 # Keep in lockstep with pyproject.toml — the published 0.5.1 wheel
 # previously reported 0.5.0 from this constant, and the cache key is
 # derived from it (cache.cache_key).
-__version__ = '0.6.0'
+__version__ = '0.7.0'
 
 # Re-export the plugin API at the package level so users can
 # `from tmaudit import Finding, check` instead of
@@ -88,7 +90,58 @@ __all__ = [
     "CacheDB",
     "cache_key",
     "plugin_cache_key",
+    # Evidence axis (v0.9.0): tier_of / gate / annotate / evidence_summary
+    "tier_of",
+    "gate",
+    "annotate",
+    "evidence_summary",
+    "CONFIRMED",
+    "PARTIAL",
+    "UNSUBSTANTIATED",
+    # Temporal regression ledger (v0.9.0): regen / verify / find_regression
+    "regen",
+    "verify",
+    "find_regression",
+    "append_history",
+    "load_history",
+    # Ranking metrics (v0.9.0): ndcg_at_k / ndcg_at_k_standard / precision_at_k
+    "ndcg_at_k",
+    "ndcg_at_k_standard",
+    "precision_at_k",
+    "mrr_at_k",
+    "aggregate",
 ]  # type: ignore
+
+# The evidence axis of a finding: severity answers "how bad", the evidence
+# tier answers "how sure". See tmaudit/evidence.py for the per-category
+# rationale and the gate rule.
+from .evidence import (
+    CONFIRMED,
+    PARTIAL,
+    UNSUBSTANTIATED,
+    annotate,
+    evidence_summary,
+    gate,
+    tier_of,
+)
+
+# Temporal regression ledger for load-bearing fixes.
+from .witness import (
+    append_history,
+    find_regression,
+    load_history,
+    regen,
+    verify,
+)
+
+# Ranking metrics with an explicit normalisation contract.
+from .metrics import (
+    aggregate,
+    mrr_at_k,
+    ndcg_at_k,
+    ndcg_at_k_standard,
+    precision_at_k,
+)
 
 # Re-export cache helpers that plugin authors will need.
 from .cache import (

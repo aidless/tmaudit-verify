@@ -1,0 +1,49 @@
+{
+  "format": "tmaudit-artifact-spec/1",
+  "_comment": [
+    "Example spec for `tmaudit artifacts --spec examples/artifact-spec.json`.",
+    "Every entry below encodes a failure mode that a return code cannot see.",
+    "Paths are relative to the working directory; run from the repo root after",
+    "producing the artifacts, or rewrite them.",
+    "Note: '_comment' is not a recognised spec key and will be rejected if",
+    "placed inside an artifact object — it is legal only at this top level",
+    "because parse_spec ignores keys it does not read."
+  ],
+  "artifacts": [
+    {
+      "label": "rendered-report",
+      "path": "out/report.pdf",
+      "format": "pdf",
+      "min_bytes": 1000,
+      "min_pages_pdf": 2,
+      "must_contain": ["Quarterly"],
+      "must_not_contain": ["{", "TODO", "undefined"],
+      "_why": "min_pages_pdf=2 catches a header-only shell; must_contain proves the body reached the renderer; must_not_contain is the unsubstituted-template guard"
+    },
+    {
+      "label": "spreadsheet-export",
+      "path": "out/table.xlsx",
+      "format": "zip",
+      "min_bytes": 2000,
+      "zip_members": ["xl/workbook.xml", "xl/worksheets/sheet1.xml"],
+      "text_regex": "Revenue"
+    },
+    {
+      "label": "diagram-png",
+      "path": "out/diagram.png",
+      "format": "png",
+      "min_bytes": 500,
+      "png_dimensions": [1280, 720],
+      "_why": "exact dimensions catch DPI/scale conversion errors, which are off by one or by a factor, never by chance"
+    },
+    {
+      "label": "generated-script",
+      "path": "out/build.py",
+      "format": "text",
+      "min_bytes": 100,
+      "text_regex": "def main",
+      "must_not_contain": ["WARNING", "{", "None"],
+      "_why": "a generator that hits an unsupported input often emits a WARNING comment and continues; the script still runs, so only the text check sees it"
+    }
+  ]
+}

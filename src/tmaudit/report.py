@@ -35,6 +35,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
+from .evidence import tier_of as evidence_tier_of
+
 
 @dataclass
 class Finding:
@@ -264,6 +266,20 @@ def render_markdown(
         f'({n_high} HIGH, {n_medium} MEDIUM, {n_low} LOW)'
     )
     lines.append('')
+    # Evidence axis: how sure we are, independent of how bad it is. See
+    # tmaudit.evidence for why a PARTIAL finding alone must not gate.
+    if n_findings:
+        tiers = {'CONFIRMED': 0, 'PARTIAL': 0, 'UNSUBSTANTIATED': 0}
+        for r in results:
+            for f in r.findings:
+                tiers[evidence_tier_of(f.category)] = \
+                    tiers.get(evidence_tier_of(f.category), 0) + 1
+        lines.append(
+            f'**Aggregate evidence**: {tiers["CONFIRMED"]} CONFIRMED, '
+            f'{tiers["PARTIAL"]} PARTIAL (proxy-based — review, do not gate alone), '
+            f'{tiers["UNSUBSTANTIATED"]} UNSUBSTANTIATED'
+        )
+        lines.append('')
     # ----- Summary table -----
     lines.append('## Summary')
     lines.append('')
@@ -303,11 +319,14 @@ def render_markdown(
             lines.append('')
             for cat in sorted(by_category.keys()):
                 cat_findings = by_category[cat]
-                lines.append(f'#### {cat} ({len(cat_findings)} finding(s))')
+                tier = evidence_tier_of(cat)
+                lines.append(f'#### {cat} ({len(cat_findings)} finding(s)) '
+                             f'— evidence: {tier}')
                 lines.append('')
                 for f in cat_findings:
                     loc = f'line {f.line}' if f.line > 0 else 'global'
-                    lines.append(f'- **[{f.severity}] {f.category}** ({loc})')
+                    lines.append(f'- **[{f.severity}] {f.category}** ({loc}) '
+                                 f'— evidence: {evidence_tier_of(f.category)}')
                     # Indent the message
                     msg_lines = f.message.split('\n')
                     for ml in msg_lines:

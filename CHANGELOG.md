@@ -4,6 +4,149 @@ All notable changes to `tmaudit` are documented here.
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added — `evidence`: the second axis of a finding
+
+Severity answers "how bad". It does not answer "how sure". A finding from
+`C8` is a recomputation from the table's own numbers; a finding from `C7` is
+a sentence-shape heuristic. Reporting both as `[MEDIUM]` throws that
+distinction away, and a gate that blocks on both turns a proxy into an
+authority.
+
+Every category now carries an evidence tier in `tmaudit/evidence.py`:
+
+- `CONFIRMED` — the detector re-derived the fact, so a false positive
+  requires the recomputation itself to be wrong (`C4`, `C8`);
+- `PARTIAL` — a textual or structural proxy. ruflo's ADR-081 measured a
+  proxy of this shape under-reporting one configuration by 10 points and
+  over-reporting another by 10, the two errors cancelling in aggregate;
+- `UNSUBSTANTIATED` — a named suspicion that was not reproduced. This is
+  also the default for an unclassified detector, so an unknown check cannot
+  look trustworthy by accident.
+
+`gate()` encodes the rule that follows: a `CONFIRMED` finding blocks alone,
+a `PARTIAL` finding blocks only when corroborated (a second `PARTIAL` in the
+same category, or any `CONFIRMED`), and `UNSUBSTANTIATED` never blocks. The
+per-category rationale lives next to the mapping, so upgrading a detector to
+re-derive its claim changes one line and a reviewer can see why.
+
+`render_markdown` now prints the tier per finding and an aggregate evidence
+line beside the severity counts.
+
+### Added — `witness`: a temporal regression ledger
+
+`_check_all_regressions.py` proves a regression test catches a re-injected
+bug *now*. It cannot say which commit removed a load-bearing line, because
+it keeps no history. `tmaudit witness` records, per fix, the file's SHA-256
+and the presence of a marker substring from the diff, appends one JSONL
+snapshot per run with the git commit, and answers "last pass → first fail"
+for a regressed fix.
+
+Distinct from ruflo's toolkit it was ported from: no signature. ruflo signs
+with a seed derived from the public commit and labels the result
+`authenticity: self-attested`; a signature anyone can derive proves
+integrity, not authorship. The Python port states that in every `verify`
+output rather than advertising a guarantee it cannot give.
+
+### Added — `metrics`: ranking metrics with an explicit normalisation contract
+
+Ported from the implementation measured in ruflo's ADR-081 benchmark, with
+both divergences documented rather than silently corrected:
+
+- `precision_at_k` normalises by `min(k, len(returned))`; `divide_by_k=True`
+  reproduces the original, which scores a two-result all-relevant query at
+  0.667 instead of 1.0;
+- `ndcg_at_k` keeps the original ideal-DCG source (relevant count found in
+  the top-k); `ndcg_at_k_standard` takes `total_relevant` from the corpus.
+  For one relevant recalled at rank 1 with three in the corpus the two read
+  1.000 and 0.469 — a 2.13× overstatement exactly where recall is worst.
+
+29 golden tests compute every expected value by hand.
+
+### Added — `tmaudit witness regen|verify|history`
+
+CLI surface for the ledger, exit codes 0/1 with 2 reserved for usage errors,
+so only 0 means every marker is present.
+
+### Tests
+
+54 new tests (12 evidence, 13 witness, 29 metrics). Full suite: 534 passed,
+0 failed, 3 skipped. The witness tests build a real throwaway git repository,
+delete the marker, and assert both the non-zero exit and the commit the
+history attributes the regression to.
+
+## [v0.7.0] — 2026-10-25
+
+### Added — `artifacts`: artifact-side verification for agent tool calls
+
+A tool that exits 0 has not necessarily done anything. Auditing
+`HKUDS/CLI-Anything` on 2026-10-24 turned up two instances of the same class
+of defect: its draw.io harness returns `{"action": "export_fallback"}` with
+**exit code 0** when the backend is missing, and its FreeCAD macro generator
+silently drops boolean results and rewrites `pad(length=42)` to `Length = 10.0`
+while `export` still reports success. Both are process signals presenting
+themselves as results.
+
+`tmaudit artifacts` checks produced files and reports one of three verdicts:
+
+- `PASS` — the property asserted was established;
+- `FAIL` — a contradicting measurement exists;
+- `UNVERIFIABLE` — the check could not be carried out.
+
+The third verdict is the point. Test suites that skip when a dependency is
+missing still go green, which makes "never ran" indistinguishable from
+"passed". `UNVERIFIABLE` never compares equal to `PASS`, and a run containing
+only unverifiable artifacts exits 2 rather than 0.
+
+Every result also carries an **evidence level** (`EXISTS` → `NONTRIVIAL` →
+`MAGIC` → `PARSED` → `SEMANTIC`) recording the strongest claim actually
+established, so a report cannot state more than was measured.
+
+Checks available without third-party libraries (the package keeps
+`dependencies = []`): magic-byte signatures, ZIP/OOXML/ODF member presence and
+CRC, PDF page-object count and content-stream decodability, PNG IHDR
+dimensions, SQLite headers, UTF-8 text payloads (generated scripts, g-code,
+config dumps), literal and regex content matching against extracted document
+text, and a stale-artifact guard (`min_mtime`) that rejects files predating the
+producing command.
+
+    tmaudit artifacts out.pdf --format pdf --min-bytes 1000
+    tmaudit artifacts --spec artifacts.json
+    tmaudit artifacts --spec artifacts.json --min-mtime 1761430000 --json
+
+Spec files reject unknown keys, because a typo'd key would otherwise silently
+disable the check it was meant to add. Keys beginning with `_` are accepted as
+annotations, so a spec can explain why a threshold was chosen next to the
+threshold.
+
+### Added — `python_syntax`: the produced script must at least parse
+
+A code artifact can be non-empty, contain the expected symbols, and still be
+invalid Python. Repairing the FreeCAD macro generator produced exactly that:
+a `RuntimeError` message built with `{name!r}` inside a single-quoted string
+emitted a macro that failed to parse, while `export` reported success.
+
+    tmaudit artifacts macro.FCMacro --format py --python-syntax
+
+Failures report position, not just a verdict:
+`python syntax error at line 1 col 6: '(' was never closed`.
+`python_syntax` on a binary payload returns `UNVERIFIABLE` rather than `FAIL`,
+since the check was never carried out; declare `format: text` (or use a `.py`
+extension) to enable it.
+
+This closes the last manually-judged item in the B6 checklist, but it does not
+close the class of defect. A macro that emits
+`doc.getObject('Unnamed')` parses cleanly and references an object that does
+not exist — `PARSED` evidence (E4) asserts only that a parse succeeded, never
+that the semantics are right.
+
+### Notes
+
+`--min-mtime` exists because a stale artifact from a previous run satisfies
+every other check in this module. Callers that can record the start time of the
+producing command should always pass it.
+
 ## [v0.6.0] — 2026-10-24
 
 ### Added — `admission`: statistical certificates for self-evolving harness claims
