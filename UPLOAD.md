@@ -47,7 +47,7 @@ Password: pypi-AgEIcHlwa... ← 粘贴刚才那串 token
 ## 1. 上传到 TestPyPI
 
 ```bash
-cd /home/liuzewen/project-review-20261013/verify/tmaudit
+cd path/to/tmaudit-verify
 
 /tmp/wv3/bin/python -m twine upload \
   --repository-url https://test.pypi.org/legacy/ \
@@ -85,7 +85,7 @@ https://test.pypi.org/project/tmaudit/0.6.0/
 
 ```bash
 rm -rf /tmp/tp-verify
-/home/liuzewen/.workbuddy/binaries/python/versions/3.13.12/bin/python3 -m venv /tmp/tp-verify
+python3 -m venv /tmp/tp-verify
 
 /tmp/tp-verify/bin/pip install \
   --index-url https://test.pypi.org/simple/ \
@@ -137,7 +137,7 @@ printf '\\documentclass{article}\n\\begin{document}\n\\section{Intro}\nCode at \
 **先确认 §2 全部通过。** 只有一步：
 
 ```bash
-cd /home/liuzewen/project-review-20261013/verify/tmaudit
+cd path/to/tmaudit-verify
 ls -l dist/          # 确认只有 0.6.0 的两个文件，没有别的版本残留
 
 /tmp/wv3/bin/python -m twine upload \
@@ -167,7 +167,7 @@ curl -s https://pypi.org/pypi/tmaudit/json | \
 
 ```bash
 rm -rf /tmp/pypi-verify
-/home/liuzewen/.workbuddy/binaries/python/versions/3.13.12/bin/python3 -m venv /tmp/pypi-verify
+python3 -m venv /tmp/pypi-verify
 /tmp/pypi-verify/bin/pip install tmaudit==0.6.0
 /tmp/pypi-verify/bin/tmaudit --version
 ```
