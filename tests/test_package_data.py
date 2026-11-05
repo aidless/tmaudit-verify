@@ -8,10 +8,13 @@ defaults. The full test suite stayed green because it runs against ``src/``
 via ``PYTHONPATH``, where the file is present. Editable installs hide it for
 the same reason.
 
-The check therefore reads the **built wheel**, not the source tree. Building
-is slow, so it is marked ``slow`` and skips when ``dist/`` is absent; the
-structural test below always runs and catches the ``package-data`` omission
-directly.
+The check therefore reads the **built wheel**, not the source tree. The
+structural test below always runs and catches a ``package-data`` omission.
+The wheel test skips when ``dist/`` has no wheel. CI runs ``python -m build``
+first, so that skip does not happen in CI. A skip is not a pass of the
+wheel check. The wheel test is not marked ``slow``: opening a zip is cheap,
+and marking it slow deselected it from the same CI job that had just built
+the wheel.
 """
 from __future__ import annotations
 
@@ -70,7 +73,6 @@ class TestPackageDataDeclaration:
         assert "configs/*.py" in patterns
 
 
-@pytest.mark.slow
 class TestBuiltWheelContents:
     """For real: open the newest wheel and look inside it."""
 

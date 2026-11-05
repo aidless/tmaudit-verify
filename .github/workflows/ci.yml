@@ -52,9 +52,13 @@ jobs:
         run: python -m build
 
       - name: Run the test suite
-        # The two slow end-to-end tests need the author's private paper
-        # directories, which are not in this repository. They are deselected
-        # rather than left to fail for environmental reasons.
+        # `-m "not slow"` drops tests that need trees this repository does
+        # not contain: tests/test_corpus_regression.py (a fetched arXiv
+        # corpus) and TestEndToEndAudit in tests/test_forge_happy.py
+        # (PAPER*_CONSOLIDATED). The count of that selection is the sentence
+        # in README.md, checked by tests/test_claims_drift.py.
+        # tests/test_package_data.py opens dist/*.whl. This job builds the
+        # wheel first, so that check runs here. It is not marked slow.
         run: python -m pytest -m "not slow" -q
 
   static:

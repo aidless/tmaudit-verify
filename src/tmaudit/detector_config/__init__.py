@@ -1,9 +1,8 @@
 r"""mm3 detector config loader.
 
-Standalone mini-detector: only the config-related surface from
-``F:\Research\_inbox\方法论\mm3_hallucination_detector.py`` is exposed,
-so it can be unit-tested in isolation without pulling in the full
-1000+ line detector (or the rest of the F:\\Research\\ tree).
+Standalone mini-detector: only the config-related surface of an earlier
+hallucination detector is exposed, so it can be unit-tested in isolation
+without pulling in that detector's network clients or any private tree.
 
 Public API:
 - load_config(path=None) -> dict

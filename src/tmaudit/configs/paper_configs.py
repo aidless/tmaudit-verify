@@ -2,10 +2,10 @@
 """gen_verify_scripts.py — fork the verify_p<N>.py audit script from TEMPLATE.
 
 This tool:
-  1. Reads F:/Research/TEMPLATE/_verify_TEMPLATE.py
+  1. Reads the verify template (see TEMPLATE_DIR)
   2. Reads PAPER_CONFIGS (below) for the per-paper check configuration
   3. Substitutes the ROOT and CHECKS_CONFIG blocks
-  4. Writes the result to F:/Research/PAPER<N>_CONSOLIDATED/verify_p<N>.py
+  4. Writes the result to <research>/PAPER<N>_CONSOLIDATED/verify_p<N>.py
   5. Backs up any existing target file to .bak_before_template
 
 Usage:
@@ -28,11 +28,10 @@ import os
 import sys
 from pathlib import Path
 
-# The author's local research tree. Override with TMAUDIT_RESEARCH_DIR so this
-# package can be driven on a machine that does not have F:/Research — without it
-# every per-paper configuration points at a directory that does not exist and
-# audit-all dies with FileNotFoundError before running a single check.
-RESEARCH_DIR = Path(os.environ.get('TMAUDIT_RESEARCH_DIR', 'F:/Research'))
+# Per-paper directories live under TMAUDIT_RESEARCH_DIR. There is no
+# author-machine default. Unset, they resolve under ./papers, which this
+# repository does not ship. `tmaudit list` then shows those paths as missing.
+RESEARCH_DIR = Path(os.environ.get('TMAUDIT_RESEARCH_DIR', 'papers'))
 TEMPLATE_DIR = Path(os.environ.get('TMAUDIT_TEMPLATE_DIR',
                                str(RESEARCH_DIR / 'TEMPLATE')))
 
@@ -131,8 +130,7 @@ PAPER_CONFIGS: dict[int, dict] = {
         # invariance, calibration, efficiency). The C1 symbols
         # are the vertex labels.
         #
-        # TODO: confirm the actual symbol names by reading
-        # F:\Research\PAPER2_CONSOLIDATED\main.tex. The names
+        # TODO: confirm the actual symbol names against that paper's main.tex. The names
         # below are plausible based on the C3 concept and the
         # typical structure of impossibility-result papers.
         'dir': RESEARCH_DIR / 'PAPER2_CONSOLIDATED',
@@ -191,8 +189,7 @@ PAPER_CONFIGS: dict[int, dict] = {
         # variable's own variability). The C1 symbols are
         # the two noise components and the total.
         #
-        # TODO: confirm the actual symbol names by reading
-        # F:\Research\PAPER3_CONSOLIDATED\main.tex. The names
+        # TODO: confirm the actual symbol names against that paper's main.tex. The names
         # below are plausible based on the C3 concept.
         'dir': RESEARCH_DIR / 'PAPER3_CONSOLIDATED',
         'c1_symbols': [
@@ -254,8 +251,7 @@ PAPER_CONFIGS: dict[int, dict] = {
         # would not replicate with a different N). The C1
         # symbols are the metric and the threshold.
         #
-        # TODO: confirm the actual symbol names by reading
-        # F:\Research\PAPER4_CONSOLIDATED\main.tex. The names
+        # TODO: confirm the actual symbol names against that paper's main.tex. The names
         # below are plausible based on the C3 concept.
         'dir': RESEARCH_DIR / 'PAPER4_CONSOLIDATED',
         'c1_symbols': [
@@ -528,6 +524,10 @@ def substitute_verify(template: str, cfg: dict) -> str:
     parts.append('')
     parts.append("    'c6_blacklist':")
     parts.append(_format_c6_blacklist(cfg.get('c6_blacklist', ['paradigm', 'yield', 'reveal'])))
+    parts.append('')
+    # C7 is on every built-in paper config. Leaving it out meant a fork from
+    # this generator silently kept the template default.
+    parts.append("    'c7_max_ceremonial': " + repr(cfg.get('c7_max_ceremonial', 2)) + ',')
     parts.append('')
     # C8 (added in v0.3.0): per-paper list of claimed effects
     # to verify. If empty/None, C8 is a no-op.

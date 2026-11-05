@@ -203,7 +203,7 @@ SUMMARY
 ```
 $ tmaudit verify --paper 5
 ============================================================
-Running audit on: F:/Research/PAPER5_CONSOLIDATED
+Running audit on: papers/PAPER5_CONSOLIDATED
   C1: 0 finding(s)
   C2: 0 finding(s)
   C3: 0 finding(s)
@@ -320,7 +320,7 @@ Added `tests/test_forge_happy.py::TestEndToEndAudit::test_paper_6_forks_and_pass
 ```text
 $ tmaudit verify --paper 6
 ============================================================
-Running audit on: F:/Research/PAPER6_CONSOLIDATED
+Running audit on: papers/PAPER6_CONSOLIDATED
   C1: 0 finding(s)
   C2: 0 finding(s)
   C3: 0 finding(s)
@@ -331,12 +331,12 @@ All checks passed. 0 finding(s).
 
 $ tmaudit list
 Known paper configurations:
-  Paper 1    OK  OK   F:/Research/PAPER1_CONSOLIDATED
-  Paper 2    OK  -    F:/Research/PAPER2_CONSOLIDATED
-  Paper 3    OK  -    F:/Research/PAPER3_CONSOLIDATED
-  Paper 4    OK  -    F:/Research/PAPER4_CONSOLIDATED
-  Paper 5    OK  OK   F:/Research/PAPER5_CONSOLIDATED
-  Paper 6    OK  OK   F:/Research/PAPER6_CONSOLIDATED  <-- NEW
+  Paper 1    OK  OK   papers/PAPER1_CONSOLIDATED
+  Paper 2    OK  -    papers/PAPER2_CONSOLIDATED
+  Paper 3    OK  -    papers/PAPER3_CONSOLIDATED
+  Paper 4    OK  -    papers/PAPER4_CONSOLIDATED
+  Paper 5    OK  OK   papers/PAPER5_CONSOLIDATED
+  Paper 6    OK  OK   papers/PAPER6_CONSOLIDATED  <-- NEW
 ```
 
 ## Screenshots / output
@@ -522,7 +522,7 @@ SUMMARY: checkbox counts across all 3 scenarios
   2. New paper          35        20          5       10
   3. Refactor           33        18          7       8
 
-Wrote F:\Research\TEMPLATE\pr_demo.md (15,576 bytes)
+Wrote pr_demo.md (15,576 bytes)
 Removed _demo_pr_workflow_backup.py
 
 Done.

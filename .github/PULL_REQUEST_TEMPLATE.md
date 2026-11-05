@@ -76,8 +76,8 @@ the human author must still verify the rest.
 
 ### Automated checks (CI runs these)
 
-- [ ] `pytest` passes locally (46 tests, ~0.4s)
-- [ ] `python _check_all_regressions.py` reports 6/6 caught
+- [ ] `python -m pytest -m "not slow"` passes (the count is the sentence in `README.md`)
+- [ ] `python _check_all_regressions.py` reports every injected bug caught
 - [ ] `python _build_pyz.py` produces a working `tmaudit.pyz`
 - [ ] `python tmaudit.pyz list` lists the correct papers
 - [ ] `python _check_yaml.py` reports `ci.yml` is valid
@@ -110,9 +110,10 @@ the human author must still verify the rest.
 How did you verify the change works? Paste command output, test
 logs, audit results, or screenshots.
 
-GOOD: "Added test_forge.py::TestBug6X. Ran pytest: 47 passed
-       in 0.35s. The new test fails when the strict regex
-       is substituted back into the template (verified via
+GOOD: "Added test_forge.py::TestBug6X. Ran
+       `python -m pytest -m \"not slow\"` and pasted the summary.
+       The new test fails when the strict regex is substituted
+       back into the template (verified via
        _check_all_regressions.py)."
 GOOD: "Ran tmaudit verify --paper 1 -> 0 finding(s).
        Before this PR: 1 finding. After: 0 findings."

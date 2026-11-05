@@ -132,16 +132,9 @@ we have already executed successfully on the host:
 
 ## Conclusion
 
-The CI configuration is **structurally correct** (proven by
-the dryrun) and **semantically correct** (proven by the
-identical commands having passed locally). When pushed to
-GitHub, the workflow will:
-
-1. Run 46 tests on 4 Python versions (≈ 1 minute total).
-2. Upload 4 JUnit XML artifacts.
-3. Run the regression-injection meta-test (≈ 30 seconds).
-4. Build and smoke-test `tmaudit.pyz`.
-5. Run pyflakes lint (≈ 5 seconds).
+The notes below are the simulation as it was written. They are not the
+current workflow. `.github/workflows/ci.yml` is the source for which jobs
+run, and `README.md` is the source for how many tests that selection collects.
 
 If the user has access to a machine with `act` + Docker
 available, the same workflow can be re-validated with the

@@ -195,12 +195,13 @@ def test_paper_configs_dirs_exist():
 def test_substitute_verify_works_for_every_paper():
     """substitute_verify() should not raise for any paper.
 
-    The function reads a template file (which may not exist
-    on the test machine), so we skip if missing.
+    The template that ships in this repository is the one under
+    src/tmaudit/templates/. An older copy of this test looked for
+    `_verify_TEMPLATE.py` at the repo root and skipped on every clone,
+    so the substitution it claims to cover never ran.
     """
-    tpl_path = ROOT / '_verify_TEMPLATE.py'
-    if not tpl_path.exists():
-        pytest.skip('_verify_TEMPLATE.py not found on this machine')
+    tpl_path = ROOT / 'src' / 'tmaudit' / 'templates' / 'verify_TEMPLATE.py'
+    assert tpl_path.is_file(), tpl_path
     tpl = tpl_path.read_text(encoding='utf-8')
     for paper, cfg in paper_configs.PAPER_CONFIGS.items():
         # substitute_verify should not raise

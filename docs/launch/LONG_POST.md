@@ -1,7 +1,8 @@
 # Launch post (draft) — tmaudit
 
-> Status: draft. Do not publish until `pip install tmaudit` serves 0.5.2 and the
-> pre-flight checklist below passes.
+> Status: draft copy for the upstream auditor, not a claim about this fork.
+> This fork is not published to PyPI. Do not publish this post from
+> tmaudit-verify. The install command below is not a fact about this tree.
 
 ## I ran my own audit tool on 25 papers. It found four bugs in the tool.
 
@@ -104,9 +105,10 @@ tmaudit verify --paper-dir .
 
 1. `python -m build` and inspect the wheel: `detector_config/detector.yaml`
    must be present.
-2. Fresh venv: `pip install tmaudit==0.5.2`, then
-   `tmaudit verify --paper-dir examples/sample-paper` succeeds.
+2. Upstream only: `pip install tmaudit==0.5.2` is a check for the release
+   repository after that version is actually on PyPI. It is not a check for
+   this fork, and it does not succeed here.
 3. CI green on the release commit; `_check_pyz_fresh.py` accepts `tmaudit.pyz`.
-4. Publish 0.5.2 to PyPI (trusted publishing from the GitHub Release).
+4. Publishing to PyPI is an upstream action. This fork does not upload.
 5. Post the long version once; link the repo; do not cross-post the same text to
    five communities on the same day.

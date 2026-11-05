@@ -3,12 +3,13 @@
 
 This is the GENERIC TEMPLATE. To use:
 
-    1. Copy this file to F:/Research/PAPER<N>_CONSOLIDATED/_verify_p<N>.py
+    1. Copy this file next to the paper as _verify_p<N>.py
     2. Edit the `ROOT` constant.
     3. Edit the `CHECKS_CONFIG` block to match the paper.
 
-Or, run `python gen_verify_scripts.py --paper N` from
-F:/Research/TEMPLATE/ to fork this template automatically.
+Or fork it with `tmaudit verify --paper N` from a checkout of this
+repository. The placeholder below is not a machine path; forge replaces
+`ROOT = Path('PAPER_DIR')` exactly.
 
 The ten categories of checks are:
 
@@ -76,7 +77,7 @@ from pathlib import Path
 # ============================================================================
 # Configuration (only this block needs editing per paper)
 # ============================================================================
-ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')
+ROOT = Path('PAPER_DIR')
 MAIN = ROOT / 'main.tex'
 REFS = ROOT / 'refs.bib'
 
