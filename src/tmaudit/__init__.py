@@ -27,9 +27,8 @@ and exposes a single CLI:
     tmaudit audit-all
     tmaudit plugins list
 
-The package can be installed with `pip install tmaudit/` (or
-`pip install -e .` for editable mode) and shipped as a single
-executable .pyz file with `python -m zipapp`.
+This fork is not published on PyPI. Install it from a checkout
+(`pip install -e .`) or run the committed `tmaudit.pyz`.
 """
 # Keep in lockstep with pyproject.toml — the published 0.5.1 wheel
 # previously reported 0.5.0 from this constant, and the cache key is

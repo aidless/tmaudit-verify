@@ -1,8 +1,9 @@
 # Short launch copy (draft) — tmaudit
 
-> Status: draft. Pick one or two channels; do not paste the same text everywhere
-> on the same day. Facts to keep in sync: 263 tests passing, 3 skipped; MIT;
-> `tmaudit` 0.5.2 on PyPI.
+> Status: draft copy for the upstream auditor, not a claim about this fork.
+> This fork is not published to PyPI. Do not treat "263 tests" or "on PyPI"
+> below as the suite size or the release status of this repository. The
+> counted suite is the sentence in `README.md`.
 
 ## Show HN
 

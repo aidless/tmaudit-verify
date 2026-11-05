@@ -2,12 +2,12 @@
 """gen_compile_scripts.py — fork compile scripts from TEMPLATE/ into a paper dir.
 
 This tool:
-  1. Reads F:/Research/TEMPLATE/_compile_check_TEMPLATE.py
-  2. Reads F:/Research/TEMPLATE/_fix_abstract_unicode_TEMPLATE.py
+  1. Reads the compile-check template (see TEMPLATE_DIR)
+  2. Reads the abstract-unicode template (see TEMPLATE_DIR)
   3. Substitutes the ROOT path (and TEX_BASENAME) per-paper
   4. Substitutes the ABSTRACT_REPLACEMENTS list per-paper (only for the
      abstract-unicode script; the compile script has no per-paper list)
-  5. Writes the result to F:/Research/PAPER<N>_CONSOLIDATED/ as
+  5. Writes the result under <research>/PAPER<N>_CONSOLIDATED/ as
      _compile_check.py and _fix_abstract_unicode.py
   6. Backs up any existing target file to .bak_before_template
 
@@ -28,8 +28,8 @@ import os
 import sys
 from pathlib import Path
 
-# Override with TMAUDIT_RESEARCH_DIR; see paper_configs.py for why.
-RESEARCH_DIR = Path(os.environ.get('TMAUDIT_RESEARCH_DIR', 'F:/Research'))
+# Same default as paper_configs.py: ./papers, never an author-machine path.
+RESEARCH_DIR = Path(os.environ.get('TMAUDIT_RESEARCH_DIR', 'papers'))
 TEMPLATE_DIR = Path(os.environ.get('TMAUDIT_TEMPLATE_DIR',
                                str(RESEARCH_DIR / 'TEMPLATE')))
 

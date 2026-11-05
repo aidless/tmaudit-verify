@@ -75,7 +75,7 @@ def test_render_markdown_one_paper_pass():
     """One paper, no findings, exit code 0 -> pass message."""
     r = PaperAuditResult(
         paper=1,
-        paper_dir=Path('F:/Research/PAPER1_CONSOLIDATED'),
+        paper_dir=Path('papers/PAPER1_CONSOLIDATED'),
         exit_code=0,
         findings=[],
         started_at=time.time(),
@@ -94,7 +94,7 @@ def test_render_markdown_finding_grouping_by_category():
     """Findings are grouped by category in the per-paper section."""
     r = PaperAuditResult(
         paper=5,
-        paper_dir=Path('F:/Research/PAPER5_CONSOLIDATED'),
+        paper_dir=Path('papers/PAPER5_CONSOLIDATED'),
         exit_code=0,
         findings=[
             Finding(category='C7', message='ceremonial 1', line=56, severity='MEDIUM'),
@@ -168,7 +168,7 @@ def test_parse_verify_output_basic():
     sample_stdout = '''========================================================================
 PAPER AUDIT  (verify_p5.py)
 ========================================================================
-Source: F:\\Research\\PAPER5_CONSOLIDATED\\main.tex
+Source: papers/PAPER5_CONSOLIDATED/main.tex
 Size:   67,798 chars
 Refs:   35 entries in refs.bib
 
@@ -193,7 +193,7 @@ DETAILED FINDINGS
 '''
     r = parse_verify_output(
         paper=5,
-        paper_dir=Path('F:/Research/PAPER5_CONSOLIDATED'),
+        paper_dir=Path('papers/PAPER5_CONSOLIDATED'),
         stdout=sample_stdout,
         exit_code=0,
     )
@@ -213,7 +213,7 @@ def test_parse_verify_output_empty():
     """parse_verify_output returns empty findings for an OK audit."""
     sample_stdout = '''PAPER AUDIT  (verify_p1.py)
 ========================================================================
-Source: F:\\Research\\PAPER1_CONSOLIDATED\\main.tex
+Source: papers/PAPER1_CONSOLIDATED/main.tex
 Size:   50,000 chars
 Refs:   25 entries in refs.bib
 
@@ -230,7 +230,7 @@ All checks passed.  No issues detected.
 '''
     r = parse_verify_output(
         paper=1,
-        paper_dir=Path('F:/Research/PAPER1_CONSOLIDATED'),
+        paper_dir=Path('papers/PAPER1_CONSOLIDATED'),
         stdout=sample_stdout,
         exit_code=0,
     )

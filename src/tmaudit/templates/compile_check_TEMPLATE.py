@@ -3,15 +3,15 @@
 
 This is the GENERIC TEMPLATE. To use:
 
-    1. Copy this file to F:/Research/PAPER<N>_CONSOLIDATED/_compile_check.py
+    1. Copy this file next to the paper as _compile_check.py
     2. Edit the single `ROOT` constant below to point at that paper's dir.
     3. (Optional) Edit TEX_BASENAME if the .tex file is not main.tex.
 
 No other code needs to be changed. The same 4-pass build, summary, and
 exit code logic applies to every paper.
 
-Or, equivalently, run `python gen_compile_scripts.py --paper N` from
-F:/Research/TEMPLATE/ to fork this template automatically.
+Or fork it from a checkout with `tmaudit compile --paper N`.
+The placeholder is `ROOT = Path('PAPER_DIR')`, not a machine path.
 
 Pipeline:
     pass 1: pdflatex main.tex      (generates .aux)
@@ -33,10 +33,12 @@ from pathlib import Path
 # ============================================================================
 # Configuration (only this block needs editing per paper)
 # ============================================================================
-ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')   # <-- change this per paper
+ROOT = Path('PAPER_DIR')  # replaced per paper
 TEX_BASENAME = 'main'                              # <-- only if not main.tex
-PDFLATEX = Path(r'F:\texlive\2026\bin\windows\pdflatex.exe')
-BIBTEX = Path(r'F:\texlive\2026\bin\windows\bibtex.exe')
+# Command names, resolved on PATH. An absolute install path does not belong
+# in the shipped template.
+PDFLATEX = 'pdflatex'
+BIBTEX = 'bibtex'
 # ============================================================================
 
 

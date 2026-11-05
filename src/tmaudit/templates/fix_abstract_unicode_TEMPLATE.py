@@ -3,7 +3,7 @@
 
 This is the GENERIC TEMPLATE. To use:
 
-    1. Copy this file to F:/Research/PAPER<N>_CONSOLIDATED/_fix_abstract_unicode.py
+    1. Copy this file next to the paper as _fix_abstract_unicode.py
     2. Edit the `ROOT` constant to point at that paper's dir.
     3. Edit `ABSTRACT_REPLACEMENTS` to match the symbols used in that
        paper's abstract (e.g., for Paper 2, replace ΔCAF with Δγ etc.).
@@ -36,7 +36,7 @@ from pathlib import Path
 # ============================================================================
 # Configuration (only this block needs editing per paper)
 # ============================================================================
-ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')     # <-- change this per paper
+ROOT = Path('PAPER_DIR')  # replaced per paper
 TEX_BASENAME = 'main'                                # <-- only if not main.tex
 BAK_SUFFIX = 'pre_unicode_fix'
 

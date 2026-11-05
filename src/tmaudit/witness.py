@@ -22,6 +22,14 @@ does not give, so the guarantee is not claimed at all. If release
 authenticity is needed, pin a public key at regen time and record
 the fingerprint alongside the snapshot.
 
+A marker matches only as a non-empty whole line. A substring, including
+the empty string, is not evidence the fix is still there. The manifest
+does not store a checkout path: ``verify`` uses the ``repo_root``
+argument, or the current directory, and ignores any ``repo_root`` key
+left in an older manifest. Exit code 0 means every marker line is
+present. It does not mean the file bytes match the recorded digest;
+hash drift is reported and does not by itself fail the run.
+
 Public API:
     regen(repo_root, fixes, history_path)  -> manifest dict
     verify(manifest, repo_root)            -> result dict (exit-code shaped)
@@ -58,24 +66,54 @@ def file_sha256(path: str | Path) -> str:
 
 
 def file_contains(path: str | Path, marker: str) -> bool:
+    """True when ``marker`` is a non-empty whole line of ``path``.
+
+    A substring is not a match. ``"" in text`` is true in Python, and a
+    marker that survives only inside a longer line used to verify. Both
+    were false accepts. Surrounding whitespace is ignored; any other
+    character is not.
+    """
+    if not isinstance(marker, str) or not marker.strip():
+        return False
     try:
-        return marker in Path(path).read_text(encoding='utf-8', errors='replace')
+        text = Path(path).read_text(encoding='utf-8', errors='replace')
     except OSError:
         return False
+    wanted = marker.strip()
+    return any(line.strip() == wanted for line in text.splitlines())
 
 
 def _refresh_fix(repo_root: Path, fix: dict) -> dict:
-    """Recompute sha256 + marker presence for one fix."""
-    abs_path = repo_root / fix['file']
-    if not abs_path.exists():
-        return {**fix, 'sha256': '', 'marker_verified': False, '_missing': True}
-    return {
-        'id': fix['id'],
+    """Recompute sha256 + marker presence for one fix.
+
+    ``file`` must be a relative path inside ``repo_root``. An absolute
+    path or a ``..`` segment is refused and is not copied into the
+    manifest, so a checkout path cannot ride along in the ledger.
+    """
+    raw = str(fix.get('file', ''))
+    rel = Path(raw)
+    base = {
+        'id': fix.get('id', ''),
         'desc': fix.get('desc', ''),
-        'file': fix['file'],
+        'marker': fix.get('marker', ''),
+    }
+    if raw == '' or rel.is_absolute() or any(part == '..' for part in rel.parts):
+        return {
+            **base,
+            'file': '(path omitted)',
+            'sha256': '',
+            'marker_verified': False,
+            '_rejected': 'file must be a relative path inside the repo',
+        }
+    abs_path = repo_root / rel
+    if not abs_path.exists():
+        return {**base, 'file': raw, 'sha256': '', 'marker_verified': False,
+                '_missing': True}
+    return {
+        **base,
+        'file': raw,
         'sha256': file_sha256(abs_path),
-        'marker': fix['marker'],
-        'marker_verified': file_contains(abs_path, fix['marker']),
+        'marker_verified': file_contains(abs_path, base['marker']),
     }
 
 
@@ -93,7 +131,6 @@ def regen(repo_root: str | Path,
         'schema': SCHEMA,
         'issued_at': datetime.now(timezone.utc).isoformat(),
         'git_commit': git_commit(root),
-        'repo_root': str(root),
         'total_fixes': len(refreshed),
         'verified': sum(1 for f in refreshed if f['marker_verified']),
         'fixes': refreshed,
@@ -139,10 +176,15 @@ def verify(manifest: dict, repo_root: str | Path | None = None) -> dict:
     """Check a manifest against the live tree.
 
     Returns counts and a ``regressed`` list; ``exit_code`` mirrors the CLI
-    contract: 0 = every fix present, 1 = at least one regressed or missing.
+    contract: 0 = every marker line present, 1 = at least one regressed,
+    missing, or rejected. Hash drift does not change the exit code.
+
+    ``repo_root`` is the tree to inspect. When it is omitted the current
+    directory is used. A ``repo_root`` key inside ``manifest`` is ignored:
+    older ledgers stored an absolute checkout path there, and following it
+    accepted that checkout even when the tree under inspection had regressed.
     """
-    root = Path(repo_root).resolve() if repo_root else \
-        Path(manifest.get('repo_root', '.')).resolve()
+    root = Path(repo_root if repo_root is not None else '.').resolve()
     results = []
     for fix in manifest.get('fixes', []):
         live = _refresh_fix(root, fix)
@@ -244,6 +286,9 @@ def cli(argv: list[str] | None = None) -> int:
             print(f"  MISSING    {fix_id}")
         for fix_id in result['drifted']:
             print(f"  DRIFT      {fix_id} (content changed, marker still present)")
+        if result['drifted']:
+            print("note: exit 0 means the marker line is still present, not that "
+                  "the file matches the recorded digest.")
         print("note: integrity check only — this ledger is unsigned, so it cannot "
               "prove authorship of the recorded state.")
         return result['exit_code']

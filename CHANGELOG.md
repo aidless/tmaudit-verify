@@ -71,10 +71,38 @@ so only 0 means every marker is present.
 
 ### Tests
 
-54 new tests (12 evidence, 13 witness, 29 metrics). Full suite: 534 passed,
-0 failed, 3 skipped. The witness tests build a real throwaway git repository,
+Evidence, witness, and metrics tests were added with those modules (12, 13,
+and 29 at the time). The witness tests build a real throwaway git repository,
 delete the marker, and assert both the non-zero exit and the commit the
 history attributes the regression to.
+
+An earlier draft of this section said the full suite was "534 passed, 0 failed,
+3 skipped". That total is not what `pytest --collect-only` reports for this
+tree, so it is withdrawn. The fast-suite size is the selected/deselected pair
+in `README.md`, checked by `tests/test_claims_drift.py`. Historical version
+sections below keep the counts they were published with.
+
+### Fixed — witness false accept, and author paths in the tree
+
+`witness.verify` followed `repo_root` out of the manifest. That value was the
+absolute checkout path captured at `regen`, so a verify with no `--root` could
+accept the author's tree while the tree under inspection had lost the marker.
+The manifest no longer records a checkout path, and a stored `repo_root` is
+ignored. A marker matches only as a non-empty whole line: the empty string is
+a substring of every file, and so is a marker that survives only inside a
+longer line. Exit 0 still does not mean the file bytes match the recorded
+digest. See `FAILURE_MODES.md`.
+
+Shipped templates and the default research directory no longer contain an
+absolute author path. The placeholder is `ROOT = Path('PAPER_DIR')`. Unset,
+`TMAUDIT_RESEARCH_DIR` resolves under `./papers`, which this repository does
+not ship.
+
+`_check_all_regressions.py` used to restore an injected file with
+`git checkout HEAD`. That throws away uncommitted edits in the same file.
+It now puts back the bytes from before the injection. On a checkout without
+`PAPER*_CONSOLIDATED`, bugs 4 and 6 print SKIPPED and are not in the
+`<caught>/<recorded>` line. A skip is not a pass.
 
 ## [v0.7.0] — 2026-10-25
 
@@ -234,7 +262,7 @@ branch as release 0.5.2; see `DIVERGENCE_ANALYSIS.md`.
   author's, and said nothing about it.** The five built-in rulepacks describe
   the author's own manuscripts, so their `dir` values are Windows paths. On a
   fresh `pip install` elsewhere, the listing printed all five verbatim: a new
-  user sees `F:/Research/PAPER1_CONSOLIDATED` through `PAPER5`, all absent,
+  user sees `PAPER1_CONSOLIDATED` through `PAPER5` under an absolute author path, all absent,
   with no indication that this is expected or how to repoint them. The
   override has existed all along (`TMAUDIT_RESEARCH_DIR`), and `--paper-dir`
   covers the case of auditing an unrelated paper, but neither was mentioned

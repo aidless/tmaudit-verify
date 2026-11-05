@@ -1,5 +1,4 @@
-# mm3 detector config (identical to F:\Research\_inbox\方法论\detector.yaml
-#  v0.1, kept in sync by hand for now)
+# mm3 detector config (v0.1, kept in sync by hand for now)
 # 优先级: CLI 参数 > 本文件 > 代码内 DEFAULT_CONFIG
 # 不在本文件的项使用代码默认; 删除本文件等价于全部用代码默认.
 

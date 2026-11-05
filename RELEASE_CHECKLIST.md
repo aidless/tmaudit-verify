@@ -16,7 +16,7 @@ test now fails if any two disagree.
 |---|---|---|
 | `pyproject.toml` `version` | 0.7.0 | `test_version_matches_pyproject` |
 | `src/tmaudit/__init__.py` `__version__` | 0.7.0 | `test_version_prints_package_version` |
-| `README.md` badge | 0.7.0 | manual |
+| `README.md` version prose | 0.7.0 | there is no badge |
 
 This section exists because 0.5.1 shipped while `__version__` said `0.5.0`,
 which put a wrong version string on every generated report.
@@ -25,7 +25,7 @@ which put a wrong version string on every generated report.
 
 | Gate | Command | Result |
 |---|---|---|
-| Full suite | `PYTHONPATH=src pytest` | **394 passed, 3 skipped** |
+| Full suite, 2026-10-24 local run, not the current suite | `PYTHONPATH=src pytest` | **394 passed, 3 skipped** (historical; current selection is in `README.md`) |
 | Slow corpus regression | `PYTHONPATH=src pytest -m slow` | included above |
 | Static check | `pyflakes src/tmaudit tests` | clean |
 | Metadata | `twine check dist/*` | **PASSED** (both files) |

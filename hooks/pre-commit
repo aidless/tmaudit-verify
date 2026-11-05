@@ -6,8 +6,8 @@ This hook is invoked by `git commit` (after being installed via
 It runs the four CI steps that should pass before every commit:
 
   1. _check_yaml.py   — validate .github/workflows/ci.yml
-  2. pytest           — run the 46-test unit/integration suite
-  3. _check_all_regressions.py — verify the 6 bug regression tests catch their bugs
+  2. pytest           — run the fast suite (`pytest -m "not slow"`)
+  3. _check_all_regressions.py — verify each injected bug is caught
   4. _build_pyz.py    — rebuild tmaudit.pyz
 
 If any step fails, the commit is aborted with a non-zero exit
@@ -107,12 +107,11 @@ def main() -> int:
     steps: list[tuple[str, list[str]]] = [
         ('Step 1/4: validate .github/workflows/ci.yml',
          [PY, '_check_yaml.py']),
-        ('Step 2/4: run pytest (46 tests)',
-         # --no-header -q to avoid pytest's Unicode progress
-         # markers (✓ ✗) that can crash Windows cp1252
-         # shells.
-         [PY, '-m', 'pytest', '-q', '--no-header', '--color=no']),
-        ('Step 3/4: run regression-injection meta-test (6 bugs)',
+        ('Step 2/4: run pytest -m "not slow"',
+         # Same selection CI uses. --no-header -q avoids pytest's Unicode
+         # progress markers (✓ ✗) that can crash Windows cp1252 shells.
+         [PY, '-m', 'pytest', '-m', 'not slow', '-q', '--no-header', '--color=no']),
+        ('Step 3/4: run regression-injection meta-test',
          [PY, '_check_all_regressions.py']),
         ('Step 4/4: rebuild tmaudit.pyz',
          [PY, '_build_pyz.py']),

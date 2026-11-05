@@ -43,15 +43,17 @@ the `tmaudit` package — make sure you used `pip install -e .`
 ### 3. Run the test suite
 
 ```bash
-pytest
-# Expected: 46 passed in 0.35s
+python -m pytest -m "not slow"
+# The selected and deselected counts are the sentence in README.md.
 ```
 
 ### 4. Run the meta-test (optional but recommended)
 
 ```bash
 python _check_all_regressions.py
-# Expected: 6/6 bugs are correctly caught by their regression tests
+# Prints "<caught>/<recorded>". Checks that need PAPER*_CONSOLIDATED
+# print SKIPPED and are not in that fraction. A skip is not a pass.
+# The case-list length is checked by tests/test_claims_drift.py.
 ```
 
 ### 5. Install the pre-commit hook
@@ -114,10 +116,10 @@ and this script catches it.
 
 ```bash
 python _check_all_regressions.py
-# Expected: 6/6 bugs are correctly caught by their regression tests.
+# Prints "<caught>/<recorded>". Checks that need PAPER*_CONSOLIDATED
+# print SKIPPED and are not in that fraction. A skip is not a pass.
+# The case-list length is checked by tests/test_claims_drift.py.
 ```
-
-Run time: < 30 seconds.
 
 ## Pre-commit hook
 
@@ -126,8 +128,8 @@ The pre-commit hook runs four checks on every `git commit`:
 | Step | Script | What it checks |
 |---|---|---|
 | 1 | `_check_yaml.py` | `.github/workflows/ci.yml` is parseable YAML with expected structure. |
-| 2 | `pytest` | All 46 unit + integration tests pass. |
-| 3 | `_check_all_regressions.py` | All 6 bug regression tests actually catch their bugs. |
+| 2 | `pytest -m "not slow"` | The fast suite. The selected and deselected counts are the sentence in `README.md`, not a number frozen here. |
+| 3 | `_check_all_regressions.py` | Each injected bug that can run here is caught. Checks that need `PAPER*_CONSOLIDATED` are skipped, and a skip is not a pass. |
 | 4 | `_build_pyz.py` | `tmaudit.pyz` builds without error. |
 
 The hook is implemented in `hooks/pre-commit` as a **cross-platform
@@ -202,7 +204,7 @@ entry to `PAPER_CONFIGS`:
 
 ```python
 6: {
-    'dir': Path('F:/Research/PAPER6_CONSOLIDATED'),
+    'dir': Path('papers/PAPER6_CONSOLIDATED'),
     'c1_symbols': [
         {
             'name': '$M (memory size)$',
@@ -262,8 +264,8 @@ def test_paper_6_forks_and_passes(self):
 
 Before opening a pull request, make sure:
 
-- [ ] `pytest` passes (46 tests, ~0.35s)
-- [ ] `python _check_all_regressions.py` shows 6/6 caught
+- [ ] `python -m pytest -m "not slow"` passes (count is in `README.md`)
+- [ ] `python _check_all_regressions.py` reports every injected bug caught
 - [ ] `python _build_pyz.py` produces a working `tmaudit.pyz`
 - [ ] `python tmaudit.pyz list` lists the correct papers
 - [ ] `python _check_yaml.py` reports `ci.yml` is valid

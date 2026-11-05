@@ -1,9 +1,10 @@
-"""_check_all_regressions.py — verify that the 12 bug-specific
-regression tests in tests/test_forge.py, tests/test_c6_threshold.py,
-tests/test_c7_citation_context.py, tests/test_cache.py,
-tests/test_c10_reproducibility.py, tests/test_c8_statistical_power.py,
-tests/test_c9_figure_caption.py, and related test files
-actually catch a re-introduction of each bug.
+"""_check_all_regressions.py — verify that each bug-specific
+regression test actually catches a re-introduction of its bug.
+
+The case list has 16 bugs. ``tests/test_claims_drift.py`` fails if
+that sentence disagrees with the list. Exit 0 means every bug that
+ran was caught and the restored suite passes. A check that prints
+SKIPPED is not in that total and is not a pass.
 
 For each bug, this script:
   1. Backs up the relevant source file (forge.py,
@@ -17,7 +18,7 @@ For each bug, this script:
   6. Re-runs the test and asserts it PASSES.
 
 Exit code:
-  0 if all 12 bugs are correctly caught and restored.
+  0 if every bug that ran was caught and the restored suite passes.
   1 if any bug is NOT caught (i.e. the regression test would
     silently miss the bug — a serious problem).
 
@@ -56,13 +57,13 @@ def _paper_dirs_present() -> bool:
     Bugs 4 and 6 are checked through
     tests/test_forge_happy.py::TestEndToEndAudit::test_paper_{1,5}_forks_and_passes,
     which fork a verify script and run the real audit expecting zero findings. That
-    needs the manuscripts on the author's machine. The file whose absence fails first
-    is the forked script itself — FileNotFoundError on
-    'F:/Research/PAPER1_CONSOLIDATED/verify_p1.py' — so that is what decides whether
+    needs the manuscripts on the machine that holds them. The file whose absence
+    fails first is the forked script itself — FileNotFoundError on
+    '<research>/PAPER1_CONSOLIDATED/verify_p1.py' — so that is what decides whether
     the check can run. Requiring only main.tex would treat an empty placeholder as a
     real paper and let the check pass vacuously.
     """
-    root = Path(os.environ.get('TMAUDIT_RESEARCH_DIR', 'F:/Research'))
+    root = Path(os.environ.get('TMAUDIT_RESEARCH_DIR', 'papers'))
     return all((root / f'PAPER{n}_CONSOLIDATED' / f'verify_p{n}.py').exists()
                for n in (1, 5))
 
@@ -103,61 +104,22 @@ def _run_pytest(test_target: str, extra: list[str] | None = None) -> tuple[int, 
 
 @contextmanager
 def _patched(path: Path) -> Iterator[None]:
-    """Context manager: backup path, yield, restore on exit.
+    """Backup ``path`` and restore those exact bytes on exit.
 
-    The restore mechanism is two-layered:
-      1. For TRACKED files, use `git checkout HEAD -- <path>`
-         to restore the committed version (this works even
-         if the working tree was already broken).
-      2. For UNTRACKED files (e.g., a newly-added file that
-         hasn't been committed yet), use a backup variable.
-         We save the file content on entry and write it back
-         on exit. This is the original behavior.
-
-    This two-layered approach ensures that:
-      - Tracked files always restore to the committed state.
-      - Untracked files restore to whatever they were before
-        the with-block started.
-      - State leaks are eliminated in both cases.
-
-    Usage:
-        with _patched(FORGE):
-            FORGE.write_text(new_content, encoding='utf-8')
+    An earlier version restored tracked files with ``git checkout HEAD``.
+    That puts back the last commit, so any uncommitted edit in the same
+    file is discarded and the final sanity run then fails for a reason
+    that is not the injected bug. The bytes to put back are the bytes
+    that were on disk when the injection started.
     """
-    # Check if the file is tracked by git.
-    rel_path = str(path.relative_to(TEMPLATE))
-    is_tracked = (
-        subprocess.run(
-            ['git', 'ls-files', '--error-unmatch', rel_path],
-            cwd=str(TEMPLATE),
-            capture_output=True,
-        ).returncode == 0
-    )
-
-    if is_tracked:
-        # Use git checkout for tracked files (atomic, robust).
-        try:
-            yield
-        finally:
-            try:
-                subprocess.run(
-                    ['git', 'checkout', 'HEAD', '--', rel_path],
-                    cwd=str(TEMPLATE),
-                    check=True,
-                    capture_output=True,
-                )
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                pass
-    else:
-        # For untracked files, use a backup-and-restore fallback.
-        backup = path.read_text(encoding='utf-8') if path.exists() else None
-        try:
-            yield
-        finally:
-            if backup is not None:
-                path.write_text(backup, encoding='utf-8')
-            elif path.exists():
-                path.unlink()
+    backup = path.read_bytes() if path.exists() else None
+    try:
+        yield
+    finally:
+        if backup is not None:
+            path.write_bytes(backup)
+        elif path.exists():
+            path.unlink()
 
 
 def _check_bug(
@@ -943,9 +905,10 @@ def main() -> int:
     # Final sanity check: all tests should pass on the restored code
     print()
     print('=== Final sanity: full test suite should pass ===')
-    # The two @pytest.mark.slow end-to-end tests audit a real paper, so they are
-    # excluded when those papers are not on this machine — the same reason the Bug 4
-    # and Bug 6 checks above are skipped. The exclusion is stated, not silent.
+    # Every @pytest.mark.slow test is excluded when the per-paper research
+    # directories are absent. That set is the end-to-end audits and the corpus
+    # regression, which is why Bug 4 and Bug 6 are skipped in the same situation.
+    # The exclusion is stated, not silent.
     slow_excluded = not _paper_dirs_present()
     if slow_excluded:
         print('  (the @pytest.mark.slow end-to-end tests are excluded: '

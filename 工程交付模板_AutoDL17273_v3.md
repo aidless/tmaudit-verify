@@ -91,7 +91,7 @@ chmod +x reproduce_AutoDL17273.sh && ./reproduce_AutoDL17273.sh
 
 ## 封板（v2→v3）
 
-- `F:\deepseek\reports\seal_20260822_2221.md` 已更新至 `v3`（原 `19KB v1` → `v3` 含双图与口径），`seal.pdf` 同步重出 `19KB→34KB`
+- 封板笔记（不在本仓库）已更新至 `v3`（原 `19KB v1` → `v3` 含双图与口径），`seal.pdf` 同步重出 `19KB→34KB`
 - `burn/flood` 已 `pkill` 释机 `174W 51C 3.5GB` 热备 `Ollama 14模型`
 - `3200稳态 400×8` 需 `800s`，`6400` 需分片/多实例
 
@@ -116,7 +116,7 @@ chmod +x reproduce_AutoDL17273.sh && ./reproduce_AutoDL17273.sh
 
 - 云端运维 → [[04_Agent对话与成果/09_主题_云端GPU与多模型裁决|⑨ 云端GPU]]
 - 评测基准 → [[04_Agent对话与成果/04_成果_评测与基准|④ 评测]]
-- 记忆账本 → `F:\deepseek\.agent-memory\` `goal-e909774a`
-- 交付 → `F:\deepseek\reports\` `F:\Research\04_Agent对话与成果\`
+- 记忆账本 → 本地笔记，不在本仓库，`goal-e909774a`
+- 交付 → 本地笔记，不在本仓库
 
-> 原始证据以 `F:\deepseek` `cloud_ops.py` 远端日志与 `/tmp/*.log` `nvidia-smi` 快照为准；本笔记为结构化快照 v3。
+> 原始证据以本地 `cloud_ops.py` 远端日志与 `/tmp/*.log` `nvidia-smi` 快照为准；本笔记为结构化快照 v3。那些路径不在本仓库。

@@ -19,7 +19,7 @@ PyPI name check on 2026-07-10:
 No name collision. We can ship under the canonical
 name `tmaudit`.
 
-See `F:\temp\check_pypi_names.py` for the full check
+See the local name-check script (not in this repository) for the full check
 script (4 sections: candidate sweep, PEP 503
 normalization, simple index, search).
 
@@ -178,7 +178,7 @@ Before tagging v0.4.1, do a **local dry-run**:
 
 ```bash
 # Build the distribution
-cd F:\Research\TEMPLATE
+# from the repository root
 python -m pip install --upgrade build
 python -m build
 
@@ -216,7 +216,7 @@ classification (we've chosen well-formed ones).
 ## 4. Tag and release
 
 ```bash
-cd F:\Research\TEMPLATE
+# from the repository root
 git tag -a v0.4.1 -m "v0.4.1 - first PyPI release (bug fixes, docs, no API change)"
 git push origin v0.4.1
 # GitHub Action triggers automatically (after first manual

@@ -29,6 +29,10 @@ from .configs.paper_configs import PAPER_CONFIGS as VERIFY_CONFIGS
 # embedded backslash.
 COHENS_D = "Cohen's d"
 
+# Shipped templates carry this assignment and nothing machine-specific.
+# Every substituter replaces this exact text. It must match
+# src/tmaudit/templates/*.py; tests/test_claims_drift.py checks that.
+TEMPLATE_ROOT_ASSIGNMENT = "ROOT = Path('PAPER_DIR')"
 
 TEMPLATES = 'tmaudit.templates'
 
@@ -155,7 +159,7 @@ def _substitute_verify(
             able to set C8/C9/C10 without editing the generated script.
     """
     out = template.replace(
-        "ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')",
+        TEMPLATE_ROOT_ASSIGNMENT,
         f"ROOT = Path({cfg['dir'].as_posix()!r})",
     )
     if cfg.get('tex_basename', 'main') != 'main':
@@ -274,7 +278,7 @@ def _substitute_verify(
 
 def _substitute_compile(template: str, cfg: dict) -> str:
     out = template.replace(
-        "ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')",
+        TEMPLATE_ROOT_ASSIGNMENT,
         f"ROOT = Path({cfg['dir'].as_posix()!r})",
     )
     if cfg.get('tex_basename', 'main') != 'main':
@@ -312,7 +316,7 @@ def _format_replacements_block(replacements: list[tuple[str, str]]) -> str:
 
 def _substitute_fix_unicode(template: str, cfg: dict) -> str:
     out = template.replace(
-        "ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')",
+        TEMPLATE_ROOT_ASSIGNMENT,
         f"ROOT = Path({cfg['dir'].as_posix()!r})",
     )
     if cfg.get('tex_basename', 'main') != 'main':
@@ -375,7 +379,7 @@ def fork_verify_generic(paper_dir: Path) -> Path:
     paper_dir = Path(paper_dir).expanduser().resolve()
     template = _read_template('verify_TEMPLATE.py')
     out = template.replace(
-        "ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')",
+        TEMPLATE_ROOT_ASSIGNMENT,
         f"ROOT = Path({paper_dir.as_posix()!r})",
     )
     target = paper_dir / 'verify_generic.py'

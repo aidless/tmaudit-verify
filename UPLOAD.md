@@ -2,7 +2,7 @@
 
 本文档给你直接复制粘贴的命令。token 由你自己输入，不进对话记录。
 
-**当前状态**：`dist/tmaudit-0.6.0-py3-none-any.whl`（103,033 B）与 `.tar.gz`（173,045 B）已构建，`twine check --strict` 双包 PASSED，工作区 429 passed / 3 skipped，wheel/sdist 内全部源文件与 `src/` 字节一致。**尚未上传任何索引。**
+**当前状态**：下面的体积和「429 passed / 3 skipped」是写这份手册时的 0.6.0 工作区记录，不是当前套件。当前选择数在 `README.md`。**尚未上传任何索引。** 本仓库不在 PyPI 上。
 
 PyPI 现有版本只有 `0.5.0`、`0.5.1`（实测确认），`0.6.0` 未被占用。
 

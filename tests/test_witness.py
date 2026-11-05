@@ -9,7 +9,6 @@ tests are the port's acceptance criteria rather than unit tests.
 """
 from __future__ import annotations
 import json
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -178,3 +177,56 @@ class TestCli:
                           '--id', 'AUTH-001'])
         # no second snapshot recorded, so no regression to report
         assert rc == 0
+
+
+class TestFalseAccept:
+    """The ledger used to report a pass for the wrong reason.
+
+    See FAILURE_MODES.md, "False witness accept".
+    """
+
+    def test_blank_marker_is_not_a_match(self, repo):
+        fixes = [{'id': 'EMPTY', 'file': 'src/auth.py', 'marker': ''}]
+        manifest = witness.regen(repo, fixes)
+        assert manifest['fixes'][0]['marker_verified'] is False
+        assert witness.file_contains(repo / 'src' / 'auth.py', '') is False
+        assert witness.file_contains(repo / 'src' / 'auth.py', '   ') is False
+        assert witness.verify(manifest, repo)['exit_code'] == 1
+
+    def test_marker_inside_a_longer_line_is_not_a_match(self, repo):
+        (repo / 'src' / 'auth.py').write_text(
+            'note = "if (self._refreshing) return self._refreshing"\n',
+            encoding='utf-8')
+        manifest = witness.regen(repo, _fixes())
+        assert manifest['fixes'][0]['marker_verified'] is False
+        assert witness.verify(manifest, repo)['exit_code'] == 1
+
+    def test_manifest_does_not_record_an_absolute_root(self, repo):
+        manifest = witness.regen(repo, _fixes())
+        blob = json.dumps(manifest)
+        assert 'repo_root' not in manifest
+        assert str(repo.resolve()) not in blob
+
+    def test_stored_absolute_root_cannot_force_a_pass(self, repo, tmp_path, monkeypatch):
+        manifest = witness.regen(repo, _fixes())
+        # An older manifest pointed verify at the checkout that was current
+        # at regen time. That tree still has the marker. The tree under
+        # inspection does not.
+        manifest = dict(manifest)
+        manifest['repo_root'] = str(repo.resolve())
+        bad = tmp_path / 'bad'
+        (bad / 'src').mkdir(parents=True)
+        (bad / 'src' / 'auth.py').write_text(BAD, encoding='utf-8')
+        monkeypatch.chdir(bad)
+        result = witness.verify(manifest)
+        assert result['exit_code'] == 1
+
+    def test_absolute_fix_path_is_omitted_and_fails(self, repo):
+        fixes = [{'id': 'ABS', 'file': str(repo / 'src' / 'auth.py'),
+                  'marker': MARKER}]
+        manifest = witness.regen(repo, fixes)
+        blob = json.dumps(manifest)
+        assert str(repo.resolve()) not in blob
+        assert manifest['fixes'][0]['file'] == '(path omitted)'
+        assert manifest['fixes'][0]['marker_verified'] is False
+        assert witness.verify(manifest, repo)['exit_code'] == 1

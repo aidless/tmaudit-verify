@@ -22,7 +22,7 @@ from tmaudit.forge import _read_template
 # ---------------------------------------------------------------------------
 
 PAPER1_CONFIG = {
-    'dir': __import__('pathlib').Path('F:/Research/PAPER1_CONSOLIDATED'),
+    'dir': __import__('pathlib').Path('papers/PAPER1_CONSOLIDATED'),
     'c1_symbols': [
         {
             'name': r'$\Delta$CAF (consensus-against-field coefficient)',
@@ -56,7 +56,7 @@ PAPER1_CONFIG = {
 # `\{...\{` (escaped braces) and `\|`. forge.py's brace counter
 # must NOT count those as Python source-level braces.
 BUG4_CONFIG = {
-    'dir': __import__('pathlib').Path('F:/Research/PAPER5_CONSOLIDATED'),
+    'dir': __import__('pathlib').Path('papers/PAPER5_CONSOLIDATED'),
     'c1_symbols': [],
     'c2_families': {'dose-response': 9, 'cross-model': 6, 'authority-bias': 3},
     # The crucial part: regex with braces INSIDE a string literal.
@@ -91,7 +91,7 @@ MINIMAL_VERIFY_TEMPLATE = '''#!/usr/bin/env python3
 from __future__ import annotations
 from pathlib import Path
 
-ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')
+ROOT = Path('PAPER_DIR')
 MAIN = ROOT / 'main.tex'
 REFS = ROOT / 'refs.bib'
 
@@ -120,7 +120,7 @@ MINIMAL_FIX_UNICODE_TEMPLATE = '''#!/usr/bin/env python3
 from __future__ import annotations
 from pathlib import Path
 
-ROOT = Path('F:/Research/PAPER1_CONSOLIDATED')
+ROOT = Path('PAPER_DIR')
 TEX_BASENAME = 'main'
 
 ABSTRACT_REPLACEMENTS: list[tuple[str, str]] = [
