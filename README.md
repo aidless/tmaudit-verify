@@ -8,7 +8,8 @@ This fork is **not published to PyPI**. Install it from a checkout.
 
 ```bash
 git clone https://github.com/aidless/tmaudit-verify.git && cd tmaudit-verify
-python3 -m pip install -e ".[dev]"
+python3 -m pip install -r requirements.lock
+python3 -m pip install -e . --no-deps && python3 -m pip install -e ./tmaudit_example_plugin --no-deps
 python3 -m pytest -m "not slow" -q
 ```
 
