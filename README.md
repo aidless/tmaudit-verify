@@ -1,5 +1,7 @@
 # tmaudit-verify
 
+[![CI](https://github.com/aidless/tmaudit-verify/actions/workflows/ci.yml/badge.svg)](https://github.com/aidless/tmaudit-verify/actions/workflows/ci.yml)
+
 The verification-side fork of [`aidless/tmaudit`](https://github.com/aidless/tmaudit):
 the same paper auditor, plus the artifact/evidence/witness tooling that never
 shipped to the main repository or to PyPI.
