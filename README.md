@@ -3,6 +3,9 @@
 [![CI](https://github.com/aidless/tmaudit-verify/actions/workflows/ci.yml/badge.svg)](https://github.com/aidless/tmaudit-verify/actions/workflows/ci.yml)
 
 The verification-side fork of [`aidless/tmaudit`](https://github.com/aidless/tmaudit):
+
+![demo](docs/demo.gif)
+
 the same paper auditor, plus the artifact/evidence/witness tooling that never
 shipped to the main repository or to PyPI.
 
@@ -52,7 +55,7 @@ python3 tmaudit.pyz artifacts README.md --format text --min-bytes 100
 ```
 
 ```text
-PASS           E4 PARSED            5,466B  README.md
+PASS           E4 PARSED            5,732B  README.md
 1 artifact(s): 1 pass, 0 fail, 0 unverifiable; weakest evidence PARSED
 ```
 
